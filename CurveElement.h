@@ -26,7 +26,7 @@ public:
     std::list<int> assigned_clusters;
 
 public:
-    CurveElement(int, std::string, int);
+    CurveElement(int, std::string, int,std::string);
     ~CurveElement();
     void setDistance(int x)
     {

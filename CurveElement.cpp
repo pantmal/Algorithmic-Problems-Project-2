@@ -18,8 +18,8 @@ void CurveElement::displayId()
 void CurveElement::displayVectorElementArray()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;
-    for(const auto &i : arrayElementTwoD)
-        myLogFile<<get<0>(i)<<"  "<<get<1>(i) <<endl;
+    for(const auto &i : arrayElementOneD)
+        myLogFile<<i <<endl;
 
 }
 
@@ -32,7 +32,7 @@ void CurveElement::displayVectorElementGrid()
     myLogFile << "size " << gridElementTwoD.size() << endl;
 }
 
-CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHashTables)
+CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHashTables, std::string variant)
 {
 
     assigned = false;
@@ -51,10 +51,16 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
     sso >> id; //Get the id
     while (sso >> temp) //And the vector values in the array field
     {
-       // arrayVectorElement[counter] = temp;
-        arrayElementTwoD.push_back({counter+1,temp});
+        // arrayVectorElement[counter] = temp;
+        if (variant == "discrete"){
+            arrayElementTwoD.push_back({counter+1,temp});
+        }else{
+            arrayElementOneD.push_back(temp);
+        }    
         counter++;
     }
+    
+
 }
 
 //Debug method

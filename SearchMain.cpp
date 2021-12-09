@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     if (probes == -1)
         probes = 2; //PARAM <N>
     if (delta == -1.0)
-        delta = 500; //PARAM <N>
+        delta = 5; //PARAM <N>
     
 
     // cout << "FILE_NAME_INPUT: " << FILE_NAME_INPUT << endl;
@@ -203,41 +203,53 @@ int main(int argc, char *argv[])
     CurveElement **Query_Array_Frechet;
 
     int query_rows = -1;
+    //Open dataset file to count number of rows.
+    ifstream myfile;
+    myfile.open(FILE_NAME_INPUT);
+    how_many_rows = count(istreambuf_iterator<char>(myfile), istreambuf_iterator<char>(), '\n');
+    //how_many_rows++;
+    //coutLineWithMessage(how_many_rows, "dataset rows are:");
+    myfile.close();
+    myfile.clear();
+
+    //Now count number of columns
+    myfile.open(FILE_NAME_INPUT);
+    if (myfile.is_open())
+    {
+        while (myfile)
+        {
+            getline(myfile, mystring);
+            stringstream sso(mystring);
+            sso >> temp;
+            while (justOnce && sso >> tempString)
+            {
+                how_many_columns++; //calculate the number of columns (dimension of the vector without the id)
+            }
+            justOnce = false;
+        }
+    }
+    else
+    {
+        cout << "error with opening input file" << endl;
+        exit(0);
+    }
+    myfile.close();
+    myfile.clear();
+
+    myLogFile << "columns==== " << how_many_columns << endl;
+    myLogFile << "rows==== " << how_many_rows << endl;
+    //--------DATA COLLECTED----------
+
+    //Save the query items.
+    ifstream myfilequery;
+    myfilequery.open(FILE_NAME_QUERY);
+    query_rows = count(istreambuf_iterator<char>(myfilequery), istreambuf_iterator<char>(), '\n');
+    //how_many_rows++;
+    cout << "Query rows are: " << query_rows << endl;
+    myfilequery.close();
+    myfilequery.clear();
         
     if (algorithm == "LSH" || algorithm == "Hypercube"){
-        //Open dataset file to count number of rows.
-        ifstream myfile;
-        myfile.open(FILE_NAME_INPUT);
-        how_many_rows = count(istreambuf_iterator<char>(myfile), istreambuf_iterator<char>(), '\n');
-        //how_many_rows++;
-        //coutLineWithMessage(how_many_rows, "dataset rows are:");
-        myfile.close();
-        myfile.clear();
-
-        //Now count number of columns
-        myfile.open(FILE_NAME_INPUT);
-        if (myfile.is_open())
-        {
-            while (myfile)
-            {
-                getline(myfile, mystring);
-                stringstream sso(mystring);
-                sso >> temp;
-                while (justOnce && sso >> tempString)
-                {
-                    how_many_columns++; //calculate the number of columns (dimension of the vector without the id)
-                }
-                justOnce = false;
-            }
-        }
-        else
-        {
-            cout << "error with opening input file" << endl;
-            exit(0);
-        }
-        myfile.close();
-        myfile.clear();
-        
         
         //And now initialize the VectorElement objects.
         myfile.open(FILE_NAME_INPUT);
@@ -264,19 +276,6 @@ int main(int argc, char *argv[])
         myfile.close();
         myfile.clear();
 
-        myLogFile << "columns==== " << how_many_columns << endl;
-        myLogFile << "rows==== " << how_many_rows << endl;
-        //--------DATA COLLECTED----------
-
-
-        //Save the query items.
-        ifstream myfilequery;
-        myfilequery.open(FILE_NAME_QUERY);
-        query_rows = count(istreambuf_iterator<char>(myfilequery), istreambuf_iterator<char>(), '\n');
-        //how_many_rows++;
-        cout << "Query rows are: " << query_rows << endl;
-        myfilequery.close();
-        myfilequery.clear();
         myfilequery.open(FILE_NAME_QUERY);
         Query_Array = new VectorElement *[query_rows];
         int query_i = 0;
@@ -312,41 +311,7 @@ int main(int argc, char *argv[])
         //     myLogFile<<"END"<<endl;
         // }
 
-    }else if (algorithm == "Frechet" && metric == "discrete" ){//TODO: else read both curves for Frechet
-
-        //Open dataset file to count number of rows.
-        ifstream myfile;
-        myfile.open(FILE_NAME_INPUT);
-        how_many_rows = count(istreambuf_iterator<char>(myfile), istreambuf_iterator<char>(), '\n');
-        //how_many_rows++;
-        //coutLineWithMessage(how_many_rows, "dataset rows are:");
-        myfile.close();
-        myfile.clear();
-
-        //Now count number of columns
-        myfile.open(FILE_NAME_INPUT);
-        if (myfile.is_open())
-        {
-            while (myfile)
-            {
-                getline(myfile, mystring);
-                stringstream sso(mystring);
-                sso >> temp;
-                while (justOnce && sso >> tempString)
-                {
-                    how_many_columns++; //calculate the number of columns (dimension of the vector without the id)
-                }
-                justOnce = false;
-            }
-        }
-        else
-        {
-            cout << "error with opening input file" << endl;
-            exit(0);
-        }
-        myfile.close();
-        myfile.clear();
-        //TODO:THIS IS COMMON FOR ALL + query
+    }else if (algorithm == "Frechet"){
         
         //And now initialize the VectorElement objects.
         myfile.open(FILE_NAME_INPUT);
@@ -360,7 +325,12 @@ int main(int argc, char *argv[])
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
-                    Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES);
+                    if (metric == "discrete"){
+                        Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"discrete");
+                    }else{
+                        Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"continuous");
+                    }
+                    
                     i++;
                 }
             }
@@ -373,20 +343,7 @@ int main(int argc, char *argv[])
         myfile.close();
         myfile.clear();
 
-        myLogFile << "columns==== " << how_many_columns << endl;
-        myLogFile << "rows==== " << how_many_rows << endl;
-        
-        //--------DATA COLLECTED----------
 
-
-        //Save the query items.
-        ifstream myfilequery;
-        myfilequery.open(FILE_NAME_QUERY);
-        query_rows = count(istreambuf_iterator<char>(myfilequery), istreambuf_iterator<char>(), '\n');
-        //how_many_rows++;
-        cout << "Query rows are: " << query_rows << endl;
-        myfilequery.close();
-        myfilequery.clear();
         myfilequery.open(FILE_NAME_QUERY);
         Query_Array_Frechet = new CurveElement *[query_rows];
         int query_i = 0;
@@ -398,7 +355,12 @@ int main(int argc, char *argv[])
                 stringstream sso(mystring);
                 if (query_i < query_rows)
                 {
-                    Query_Array_Frechet[query_i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES);
+                    if (metric == "discrete"){
+                        Query_Array_Frechet[query_i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"discrete");
+                    }else{
+                        Query_Array_Frechet[query_i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"continuous");
+                    }
+                    
                     query_i++;
                 }
             }
@@ -669,6 +631,10 @@ int main(int argc, char *argv[])
     }else if (algorithm == "Frechet" && metric == "discrete"){
 
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
+
+        uniform_int_distribution<> UM(0, INT_MAX-1000000);
+        int M = UM(e);
+        cout << M << endl;
        
         LSHash **Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
@@ -686,9 +652,7 @@ int main(int argc, char *argv[])
             uniform_real_distribution<> U(0.0, open_d);
             double t = U(e);
 
-            uniform_int_distribution<> UM(0, INT_MAX-1000000);
-            int M = UM(e);
-            cout << M << endl;
+            
             
             for (int i = 0; i < how_many_rows; i++)
             {
@@ -755,7 +719,7 @@ int main(int argc, char *argv[])
                 
                 Hash_Array[l]->insertItem(vec2add, r_array);
                 
-                //TODO: delete vec2add, and the arrays;
+                //TODO: delete vec2add, and the arrays ALSO ADD FUNCS;
                 Input_Array_Frechet[i]->gridElementTwoD.clear();    
                 //myLogFile << "END OF ARR" << endl;
             }
@@ -770,6 +734,27 @@ int main(int argc, char *argv[])
         //del stuff
 
     
+    }else{
+
+        int NUMBER_OF_BUCKETS = how_many_rows / 8;
+
+        uniform_int_distribution<> UM(0, INT_MAX-1000000);
+        int M = UM(e);
+        cout << M << endl;
+       
+        LSHash **Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
+        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
+        {
+            Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
+
+
+        
+
+        }
+
+
+       
+
     }
 
     
