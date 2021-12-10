@@ -24,6 +24,7 @@ public:
     std::list<int> assigned_clusters;
 
     CurveElement* original_curve;
+    double currentDFD;
 
 public:
     VectorElement(int, std::string, int);

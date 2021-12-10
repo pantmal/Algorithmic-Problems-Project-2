@@ -35,11 +35,13 @@ public:
     int assigned_total;
     list<VectorElement * > range_list;
 
+    double t;
+
     int temp;
 
 public:
  
-    void calculateDistanceAndFindN(VectorElement *, int *r_array, int j, int N);
+    void calculateDistanceAndFindN(VectorElement *, int *r_array, int j, int N, string algorithm);
     void displayNeighbours(int);
     void RangeSearch(VectorElement*, int*, int, double);
 
@@ -53,6 +55,11 @@ public:
     static bool cmp(VectorElement *L, VectorElement *R)
     {
         return L->distanceCurrQ < R->distanceCurrQ;
+    }
+
+    static bool cmpDFD(VectorElement *L, VectorElement *R)
+    {
+        return L->currentDFD < R->currentDFD;
     }
 
     int AmplifiedHashFunction(VectorElement *x, int *r_array);

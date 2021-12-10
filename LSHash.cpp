@@ -120,7 +120,7 @@ int LSHash::AmplifiedHashFunction(VectorElement *key, int *r_array)
 }
 
 //Finds N nearest neighbors
-void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, int N) //j=no of query
+void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, int N, string algorithm) //j=no of query
 {
   int index = AmplifiedHashFunction(q, r_array);
 
@@ -132,18 +132,41 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
   list<VectorElement *>::iterator hitr1;
   list<VectorElement *>::iterator hitr2;
 
-  //Get the L2 distance of all elements in the bucket with the given query and sort the list based on the distance.
-  for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
-  {
-    VectorElement *vobj = *hitr1;
-    vobj->distanceCurrQ = 0.0;
 
-    //ID for faster query search is disabled here but you may re-enable if you want.
-    //if (q->QueryTrickid[hashTableNumber] != vobj->QueryTrickid[hashTableNumber]) continue;
+  if (algorithm == "LSH"){
+    //Get the L2 distance of all elements in the bucket with the given query and sort the list based on the distance.
+    for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
+    {
+      VectorElement *vobj = *hitr1;
+      vobj->distanceCurrQ = 0.0;
 
-    vobj->getL2Distance(q);
+      //ID for faster query search is disabled here but you may re-enable if you want.
+      //if (q->QueryTrickid[hashTableNumber] != vobj->QueryTrickid[hashTableNumber]) continue;
+
+      vobj->getL2Distance(q);
+    }
+    table[index].sort(cmp);
+
+  }else{
+
+    for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
+    {
+      VectorElement *vobj = *hitr1;
+      vobj->currentDFD = 0.0;
+
+      CurveElement* input_curve = vobj->original_curve;
+      CurveElement* query_curve = q->original_curve;
+
+      int d = input_curve->arrayElementTwoD.size();
+      double dfd = discreteFrechet(d-1,d-1,input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);     
+
+      vobj->currentDFD = dfd;
+    }
+    table[index].sort(cmpDFD);
+
   }
-  table[index].sort(cmp);
+
+  
 
   //Now start collecting neighbors in the neighboursInfoTable and increment the counter
   int Ni = 0;
@@ -153,7 +176,13 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
       break;
 
     VectorElement *vobj = *hitr2;
-    neighboursInfoTable[j]->arrayDistance[Ni] = vobj->distanceCurrQ;
+    
+    if(algorithm == "LSH"){
+      neighboursInfoTable[j]->arrayDistance[Ni] = vobj->distanceCurrQ;
+    }else{
+      neighboursInfoTable[j]->arrayDistance[Ni] = vobj->currentDFD;
+    }
+    
     neighboursInfoTable[j]->arrayId[Ni] = vobj->id;
     Ni++;
   }

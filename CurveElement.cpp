@@ -54,6 +54,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
         // arrayVectorElement[counter] = temp;
         if (variant == "discrete"){
             arrayElementTwoD.push_back({counter+1,temp});
+            gridElementTwoD.push_back({0,0.0});
         }else{
             arrayElementOneD.push_back(temp);
             filteredElementOneD.push_back(0.0);
