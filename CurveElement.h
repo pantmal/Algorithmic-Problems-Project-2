@@ -19,6 +19,8 @@ public:
     std::vector<std::tuple<int,double>> gridElementTwoD;
     std::vector<double>  gridElementOneD;
 
+    std::vector<double>  filteredElementOneD;
+
     double distanceCurrQ;
     unsigned int *QueryTrickid;
     double silhouette_score;

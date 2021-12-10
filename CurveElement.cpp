@@ -56,6 +56,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
             arrayElementTwoD.push_back({counter+1,temp});
         }else{
             arrayElementOneD.push_back(temp);
+            filteredElementOneD.push_back(0.0);
         }    
         counter++;
     }

@@ -737,21 +737,122 @@ int main(int argc, char *argv[])
     }else{
 
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
+        LSHash Hash_Obj(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
+        Hash_Obj.initNeighboursInfo(query_rows, NUMBER_OF_NEIGHBOURS);
 
         uniform_int_distribution<> UM(0, INT_MAX-1000000);
         int M = UM(e);
         cout << M << endl;
        
-        LSHash **Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
-        {
-            Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
-
-
         
+        for (int i = 0; i < how_many_rows; i++)
+        {
 
+            double e = 0.5;
+            
+            Input_Array_Frechet[i]->filteredElementOneD.clear(); //TODO: MAYBE DEL? ALSO ADD IT FOR GRIDS
+            vector<double> v = Input_Array_Frechet[i]->arrayElementOneD;
+            
+            auto it = v.begin();
+            while (it != v.end()){
+                
+                if (it >= v.end() || it+1 >= v.end() || it+2 >= v.end()){
+                    break;
+                }
+
+                double a = *it;
+                double b = *(it+1);
+                double c = *(it+2);
+
+                // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
+
+                double res1 = abs(a-b);
+                double res2 = abs(b-c);
+
+                //it = it+3;
+                if (res1 <= e && res2 <= e){
+                    v.erase(it+1);
+                    //it = it+1;
+                }else{
+                    it = it+1;
+                }
+
+            }
+
+
+            Input_Array_Frechet[i]->filteredElementOneD = v;
+             
+
+            int filt_size = v.size(); 
+            for (int j = 0; j < filt_size; j++ ){
+    
+                double y = v[j];
+                double grid_y = floor(abs(y)/delta) * delta;   
+
+                Input_Array_Frechet[i]->gridElementOneD.push_back(grid_y);
+            }
+
+            
+
+            vector<double> v2 = Input_Array_Frechet[i]->gridElementOneD;
+            auto it2 = v2.begin();
+            while (it2 != v2.end()){
+                
+                if (it2 >= v2.end() || it2+1 >= v2.end() || it2+2 >= v2.end()){
+                    break;
+                }
+
+                double a = *it2;
+                double b = *(it2+1);
+                double c = *(it2+2);
+
+                double min_val = min(a,c);
+                double max_val = max(a,c);
+
+                // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
+
+                //it = it+3;
+                if (min_val <= b && max_val >= b){
+                    v2.erase(it2+1);
+                    //it = it+1;
+                }else{
+                    it2 = it2+1;
+                }
+
+
+            }
+            Input_Array_Frechet[i]->gridElementOneD = v2;
+
+            vector<double>  VectorizedCurve;
+            int grid_size = Input_Array_Frechet[i]->gridElementOneD.size();
+            for (int v = 0; v < grid_size ;v++ ){
+                
+                double y = Input_Array_Frechet[i]->gridElementOneD[v];
+                VectorizedCurve.push_back(y);
+            }
+
+            int size_before_pad = VectorizedCurve.size();
+            for (int pad_c = size_before_pad; pad_c < how_many_columns; pad_c++){
+                VectorizedCurve.push_back(M);
+            }
+            
+            std::stringstream sso;
+            sso << Input_Array_Frechet[i]->id;
+            sso << " ";
+            for(size_t i = 0; i < VectorizedCurve.size(); ++i){
+                if(i != 0)
+                    sso << " ";
+                sso << VectorizedCurve[i];
+            }
+            string str_curve = sso.str();
+
+            VectorElement* vec2add = new VectorElement(how_many_columns, str_curve, NUMBER_OF_HASH_TABLES);
+            vec2add->original_curve = Input_Array_Frechet[i];
+            
+            Hash_Obj.insertItem(vec2add, r_array); //do some checks
+
+            //myLogFile << "END OF ARR" << endl;
         }
-
 
        
 
