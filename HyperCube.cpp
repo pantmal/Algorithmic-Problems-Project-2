@@ -398,18 +398,21 @@ HyperCube::~HyperCube()
 
   delete[] table;
 
-  for (int i = 0; i < query_rows_field; i++)
-  {
+  if (N > 0){
+    for (int i = 0; i < query_rows_field; i++)
+    {
 
-    //neighboursInfoTable[i]->arrayDistance[0] = 0;
-    //neighboursInfoTable[i]->arrayId[0] = "";
+      //neighboursInfoTable[i]->arrayDistance[0] = 0;
+      //neighboursInfoTable[i]->arrayId[0] = "";
 
-    //delete[] neighboursInfoTable[i]->arrayId;
-    //delete[] neighboursInfoTable[i]->arrayDistance;
+      //delete[] neighboursInfoTable[i]->arrayId;
+      //delete[] neighboursInfoTable[i]->arrayDistance;
 
-    //delete neighboursInfoTable[i];
-    delete neighboursInfoTable[i];
+      //delete neighboursInfoTable[i];
+      delete neighboursInfoTable[i];
+    }
+
+    delete[] neighboursInfoTable;
   }
-
-  delete[] neighboursInfoTable;
+  
 }

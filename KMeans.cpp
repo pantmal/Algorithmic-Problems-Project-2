@@ -14,10 +14,11 @@
 #include "Helpers.h"
 
 //KMeans constructor setting assigner method and cluster num
-KMeans::KMeans(string assigner_arg, int clusters_arg){
+KMeans::KMeans(string assigner_arg, string updater_arg, int clusters_arg){
 
 
     this->assigner = assigner_arg;
+    this->updater = updater_arg;
     this->clusters = clusters_arg;
 }
 
@@ -295,7 +296,7 @@ void KMeans::ReverseAssignment(VectorElement** Input_Array, int how_many_rows){
 }
 
 //Update step by getting the mean of the centroid.
-void KMeans::update(int columns){
+void KMeans::update_vec(int columns){
     
     //Add up the column vals
     for (int k = 0; k < clusters; k++){

@@ -17,7 +17,6 @@
 #include "Cluster.h"
 #include "KMeans.h"
 
-
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -33,9 +32,12 @@ int main(int argc, char *argv[])
     int M = -1;                     //max_number_M_of_hypercube
     int probes = -1;                //number of probes
     int NUMBER_OF_HASH_TABLES = -1; //number_of_vector_hash_tables
+    double delta = -1.0;
     bool complete = false;
+    bool silhouette_param = false; //TODO: FIX BOOLS
     string assigner = "Classic"; //method. Will use Classic for assignment if none provided.
-    
+    string updater = "vec"; //TODO: Needs cases
+
     for (int i = 1; i < argc; i++){
 
         if (strcmp(argv[i], "-i") == 0)
@@ -61,7 +63,41 @@ int main(int argc, char *argv[])
                 complete = false;
             }
         }
-        else if (strcmp(argv[i], "-m") == 0)
+        else if (strcmp(argv[i], "-delta") == 0)
+        {
+            string tempd;
+            tempd = argv[i + 1];
+            delta = args_string_to_double(tempd);
+        }
+        else if (strcmp(argv[i], "-silhouette") == 0)
+        {
+            if (strcmp(argv[i + 1], "true") == 0)
+            {
+                silhouette_param = true;
+            }
+            else if (strcmp(argv[i + 1], "false") == 0)
+            {
+                silhouette_param = false;
+            }
+        }
+        else if (strcmp(argv[i], "-update") == 0)
+        {
+            if (strcmp(argv[i + 1], "Mean_Frechet") == 0)
+            {
+                updater = "frechet";
+            }
+            
+            else if (strcmp(argv[i + 1], "Mean_Vector") == 0)
+            {
+                updater = "vector";
+            }
+            else
+            {//TODO:_?
+                cout << "Method must be Mean_Frechet or Mean_Vector - wrong input" << endl;
+                exit(0);
+            }
+        }
+        else if (strcmp(argv[i], "-assignment") == 0)
         {
             if (strcmp(argv[i + 1], "Classic") == 0)
             {
@@ -75,9 +111,13 @@ int main(int argc, char *argv[])
             {
                 assigner = "Hypercube";
             }
+            else if (strcmp(argv[i + 1], "LSH_Frechet") == 0)
+            {
+                assigner = "LSH_Frechet";
+            }
             else
             {
-                cout << "Method must be Classic or LSH or Hypercube - wrong input" << endl;
+                cout << "Method must be Classic or LSH or Hypercube or LSH_Frechet - wrong input" << endl;
                 exit(0);
             }
         }
@@ -172,6 +212,8 @@ int main(int argc, char *argv[])
         kdim = 3; //PARAM 
     if (probes == -1)
         probes = 2; //PARAM 
+    if (delta == -1.0)
+        delta = 5; //PARAM <N>
 
     // cout << "number_of_clusters: " << clusters << endl;
     // cout << "number_of_vector_hash_tables: " << NUMBER_OF_HASH_TABLES << endl;
@@ -184,7 +226,7 @@ int main(int argc, char *argv[])
     bool justOnce = true;
     int how_many_columns = 0;
     int how_many_rows = 0;
-    int temp;
+    string temp;
     string mystring;
     string tempString;
 
@@ -247,7 +289,7 @@ int main(int argc, char *argv[])
     int w = 100; //Hardcoded value for w.
 
     //KMeans object is constructed and its centroid are initialized.
-    KMeans kmeans_obj(assigner, clusters);
+    KMeans kmeans_obj(assigner, updater,clusters);
     kmeans_obj.initialization(Input_Array, how_many_rows);
 
     //Setting up the HyperCube and LSHash objects if need be.
@@ -271,6 +313,7 @@ int main(int argc, char *argv[])
         {
             kmeans_obj.KMeans_Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w);
             kmeans_obj.KMeans_Hash_Array[i]->cluster_mode = true;
+            kmeans_obj.KMeans_Hash_Array[i]->query_rows_field = 0;
         }
 
         unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
@@ -314,7 +357,12 @@ int main(int argc, char *argv[])
         }
 
         //Update step
-        kmeans_obj.update(how_many_columns);
+        if (kmeans_obj.updater == "vector"){
+            kmeans_obj.update_vec(how_many_columns);
+        }//else{
+        //    
+        //}
+        
 
         //Clearing up some valus for the next pass.
         for (int j = 0; j < how_many_rows; j++){
@@ -360,19 +408,22 @@ int main(int argc, char *argv[])
     myLogFile << "clustering_time: " << duration.count() << "[s]" << endl;
 
     //Getting silhouette scores for every cluster and a total one.
-    double silhouette_total = kmeans_obj.silhouette(how_many_rows);
-    myLogFile << "Silhouette: [";
-    for (int k1 = 0; k1 < clusters; k1++){
-        
-        double get_sil = kmeans_obj.ClusterArray[k1]->silhouette_cluster;
-        if (get_sil == -2){
-            myLogFile << "Silhouette is undefined, ";
-            continue;
+    if (silhouette_param){
+        double silhouette_total = kmeans_obj.silhouette(how_many_rows);
+        myLogFile << "Silhouette: [";
+        for (int k1 = 0; k1 < clusters; k1++){
+            
+            double get_sil = kmeans_obj.ClusterArray[k1]->silhouette_cluster;
+            if (get_sil == -2){
+                myLogFile << "Silhouette is undefined, ";
+                continue;
+            }
+            
+            myLogFile << "s" << (k1 + 1) << ": " << get_sil << ", ";
         }
-        
-        myLogFile << "s" << (k1 + 1) << ": " << get_sil << ", ";
+        myLogFile << "stotal: " << silhouette_total << "]" << endl;
     }
-    myLogFile << "stotal: " << silhouette_total << "]" << endl;
+    
 
     //Print all ids, if complete parameter is set.
     if (complete){

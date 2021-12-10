@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 
     //Setting default parameters.
     if (k_input == -1){
-        if (algorithm == "LSH"){
+        if (algorithm == "LSH" || algorithm == "Frechet"){
             k_input = 4;
         }else if (algorithm == "Hypercube"){
             k_input = 14;

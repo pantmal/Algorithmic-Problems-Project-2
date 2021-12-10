@@ -21,6 +21,7 @@ class KMeans{
         int clusters;
         Cluster** ClusterArray;
         string assigner;
+        string updater;
 
         LSHash **KMeans_Hash_Array;
         int* r_array;
@@ -32,11 +33,11 @@ class KMeans{
 
     public:
 
-        KMeans(string, int);
+        KMeans(string, string, int);
         void initialization(VectorElement** , int );
         void ClassicAssignment(VectorElement**, int);
         void ReverseAssignment(VectorElement**, int );
-        void update(int);
+        void update_vec(int);
         double silhouette(int);
         ~KMeans();
 
