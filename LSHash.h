@@ -35,7 +35,8 @@ public:
     int assigned_total;
     list<VectorElement * > range_list;
 
-    double t;
+    double t1;
+    double t2;
 
     int temp;
 

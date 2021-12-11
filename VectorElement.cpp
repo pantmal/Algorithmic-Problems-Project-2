@@ -7,24 +7,6 @@ using namespace std;
 
 //std::ofstream myLogFile;
 
-//Debug method
-void VectorElement::displayId()
-{
-    // myLogFile << "id is: " << id << std::endl;
-}
-
-//Displaying each column/value of the vector
-void VectorElement::displayVectorElementArray()
-{
-    // myLogFile << "---ELEMENT ARRAY---" << std::endl;
-    int ii = 0;
-    for (int i = 0; i < size; i++)
-    {
-        myLogFile << arrayVectorElement[i] << ", ";
-    }
-    
-}
-
 VectorElement::VectorElement(int dimensions, std::string fileLine, int numberOfHashTables)
 {
 
@@ -48,6 +30,26 @@ VectorElement::VectorElement(int dimensions, std::string fileLine, int numberOfH
         counter++;
     }
 }
+
+//Debug method
+void VectorElement::displayId()
+{
+    // myLogFile << "id is: " << id << std::endl;
+}
+
+//Displaying each column/value of the vector
+void VectorElement::displayVectorElementArray()
+{
+    // myLogFile << "---ELEMENT ARRAY---" << std::endl;
+    int ii = 0;
+    for (int i = 0; i < size; i++)
+    {
+        myLogFile << arrayVectorElement[i] << ", ";
+    }
+    
+}
+
+
 
 //Debug method
 void VectorElement::displayDistanceCurrQ()

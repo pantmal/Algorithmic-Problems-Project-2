@@ -412,28 +412,25 @@ int main(int argc, char *argv[])
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
         {
             Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
-        }
-
-        //Inserting the items
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
-        {
+            
             for (int j = 0; j < how_many_rows; j++)
             {
                 Hash_Array[i]->insertItem(Input_Array[j], r_array);
             }
-        }
 
-        //Initialize the arrays for queries.
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++) //for each hash table
-        {
             Hash_Array[i]->initNeighboursInfo(query_rows, NUMBER_OF_NEIGHBOURS);
         }
 
+   
         //And now for each query...
+        double tTrueSum = 0.0;
+        double tApproxSum = 0.0;
+        double last_maf = -1.0;
         list<idDistancePair> PairList;
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array[i]->id << endl;
+            myLogFile << "Algorithm: LSH_Vector " << endl;
 
             //First get the actual N neighbors with brute force check
             std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
@@ -486,20 +483,33 @@ int main(int argc, char *argv[])
                 if (currNeighbours == NUMBER_OF_NEIGHBOURS)
                     break;
 
-                myLogFile << "Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "distanceLSH: " << hitr1->getDistance() << endl;
+                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
+                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
+                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
+
+                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                if (curr_maf > last_maf){
+                    last_maf = curr_maf;
+                } 
+
                 currNeighbours++;
             }
 
-            myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
-            myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
-
+            //myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
+            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            tApproxSum += duration_NN.count();
+            tTrueSum += duration_BF.count();
+            
             //reset the list for new q
             PairList.clear();
-
             
         }
+
+        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
+        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
+        myLogFile << "MAF = " << last_maf << endl;
+
 
         //---DELETE MEMORY---
 
@@ -537,14 +547,17 @@ int main(int argc, char *argv[])
             Cube_Obj.insertItem(Input_Array[j]);
         }
 
-
         //Initialize the arrays for queries.
         Cube_Obj.initNeighboursInfo(query_rows);
 
+        double tTrueSum = 0.0;
+        double tApproxSum = 0.0;
+        double last_maf = -1.0;
         //And now for each query...
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array[i]->id << endl;
+            myLogFile << "Algorithm: Hypercube " << endl;
 
             //First get the actual N neighbors with brute force check
             list<idDistancePair> PairListBF;
@@ -597,17 +610,29 @@ int main(int argc, char *argv[])
                 if (currNeighbours == NUMBER_OF_NEIGHBOURS)
                     break;
 
-                myLogFile << "Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "distanceHypercube: " << hitr1->getDistance() << endl;
+                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
+                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
+                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
+
+                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                if (curr_maf > last_maf){
+                    last_maf = curr_maf;
+                } 
 
                 currNeighbours++;
             }
 
-            myLogFile << "tHypercube = " << duration_NN.count() << "[s]" << endl;
-            myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            //myLogFile << "tHypercube = " << duration_NN.count() << "[s]" << endl;
+            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            tApproxSum += duration_NN.count();
+            tTrueSum += duration_BF.count();
 
         }
+
+        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
+        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
+        myLogFile << "MAF = " << last_maf << endl;
 
         //---DELETE MEMORY---
 
@@ -647,69 +672,16 @@ int main(int argc, char *argv[])
             
             int open_d = delta - 1;          
             uniform_real_distribution<> U(0.0, open_d);
-            double t = U(e);
-            Hash_Array[l]->t = t;
-            
+            double t1 = U(e);
+            double t2 = U(e);
+            Hash_Array[l]->t1 = t1;
+            Hash_Array[l]->t2 = t2;
+
             for (int i = 0; i < how_many_rows; i++)
             {
-            
-                Input_Array_Frechet[i]->gridElementTwoD.clear();
 
-                int prev_x = 0;
-                double prev_y = 0;
-                for (int j = 0; j < how_many_columns; j++){
-                    
-                    //x = floor((x-t)/d + 1/2) * d + t
-                    int x = get<0>( Input_Array_Frechet[i]->arrayElementTwoD[j]);
-                    double y = get<1>( Input_Array_Frechet[i]->arrayElementTwoD[j]);
-                    
-                    int grid_x = (floor((abs(x-t)/delta) + 0.5) * delta) + t;
-                    double grid_y = (floor((abs(y-t)/delta) + 0.5) * delta) + t;
-                    
-                    if (j != 0){
-                        if (prev_x != grid_x || prev_y != grid_y ){
-                            
-                            Input_Array_Frechet[i]->gridElementTwoD.push_back({grid_x,grid_y});
-                        }
-                        
-                    }else if (j == 0){
-                        Input_Array_Frechet[i]->gridElementTwoD.push_back({grid_x,grid_y});
-                    }
-
-                    prev_x = grid_x;
-                    prev_y = grid_y;
-                    
-
-                }
-                
-                //Input_Array_Frechet[i]->displayVectorElementGrid();
-                
-                vector<double>  VectorizedCurve;
-                int grid_size = Input_Array_Frechet[i]->gridElementTwoD.size();
-                for (int v = 0; v < grid_size ;v++ ){
-                    int x = get<0>( Input_Array_Frechet[i]->gridElementTwoD[v]);
-                    double y = get<1>( Input_Array_Frechet[i]->gridElementTwoD[v]);
-
-                    VectorizedCurve.push_back(x);
-                    VectorizedCurve.push_back(y);
-                    
-                }
-
-                int size_before_pad = VectorizedCurve.size();
-                
-                for (int pad_c = size_before_pad; pad_c < 2*how_many_columns; pad_c++){
-                    VectorizedCurve.push_back(M);
-                }
-                
-                std::stringstream sso;
-                sso << Input_Array_Frechet[i]->id;
-                sso << " ";
-                for(size_t i = 0; i < VectorizedCurve.size(); ++i){
-                    if(i != 0)
-                        sso << " ";
-                    sso << VectorizedCurve[i];
-                }
-                string str_curve = sso.str();
+                Input_Array_Frechet[i]->Snapping2d(t1,t2,delta,how_many_columns);
+                string str_curve = Input_Array_Frechet[i]->Vectorization2d(how_many_columns,M);
 
                 VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, NUMBER_OF_HASH_TABLES);
                 vec2add->original_curve = Input_Array_Frechet[i];
@@ -726,11 +698,15 @@ int main(int argc, char *argv[])
         }
 
         //query stuff
+        double tTrueSum = 0.0;
+        double tApproxSum = 0.0;
+        double last_maf = -1.0;
         list<idDistancePair> PairList;
         //idDistancePair **PairList = new idDistancePair *[NUMBER_OF_HASH_TABLES];
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
+            myLogFile << "Algorithm: LSH_Frechet_Discrete " << endl;
 
             //First get the actual N neighbors with brute force check
             std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
@@ -743,6 +719,7 @@ int main(int argc, char *argv[])
             for (int l = 0; l < how_many_rows; l++)
             {
 
+                //double dfd = 0.0; //skipping true calculations
                 double dfd = discreteFrechet(how_many_columns-1,how_many_columns-1,Input_Array_Frechet[l]->arrayElementTwoD,Query_Array_Frechet[i]->arrayElementTwoD);     
 
                 idDistancePair *Pair = new idDistancePair(Input_Array_Frechet[l]->id, dfd);
@@ -758,74 +735,13 @@ int main(int argc, char *argv[])
             for (int j = 0; j < NUMBER_OF_HASH_TABLES; j++)
             {
 
-                /////////////////////////
-
-                Query_Array_Frechet[i]->gridElementTwoD.clear();
-
-                int prev_x = 0;
-                double prev_y = 0;
-                for (int c = 0; c < how_many_columns; c++){
-                    
-                    //x = floor((x-t)/d + 1/2) * d + t
-                    int x = get<0>( Query_Array_Frechet[i]->arrayElementTwoD[c]);
-                    double y = get<1>( Query_Array_Frechet[i]->arrayElementTwoD[c]);
-                    
-                    double t = Hash_Array[j]->t;
-
-                    int grid_x = (floor((abs(x-t)/delta) + 0.5) * delta) + t;
-                    double grid_y = (floor((abs(y-t)/delta) + 0.5) * delta) + t;
-                    
-                    if (j != 0){
-                        if (prev_x != grid_x || prev_y != grid_y ){
-                            
-                            Query_Array_Frechet[i]->gridElementTwoD.push_back({grid_x,grid_y});
-                        }
-                        
-                    }else if (j == 0){
-                        Query_Array_Frechet[i]->gridElementTwoD.push_back({grid_x,grid_y});
-                    }
-
-                    prev_x = grid_x;
-                    prev_y = grid_y;
-                    
-
-                }
+                double t1 = Hash_Array[j]->t1;
+                double t2 = Hash_Array[j]->t2;
+                Query_Array_Frechet[i]->Snapping2d(t1,t2,delta,how_many_columns);
+                string str_curve = Query_Array_Frechet[i]->Vectorization2d(how_many_columns,M);
                 
-                //Input_Array_Frechet[i]->displayVectorElementGrid();
-                
-                vector<double>  VectorizedCurve;
-                int grid_size = Query_Array_Frechet[i]->gridElementTwoD.size();
-                for (int v = 0; v < grid_size ;v++ ){
-                    int x = get<0>( Query_Array_Frechet[i]->gridElementTwoD[v]);
-                    double y = get<1>( Query_Array_Frechet[i]->gridElementTwoD[v]);
-
-                    VectorizedCurve.push_back(x);
-                    VectorizedCurve.push_back(y);
-                    
-                }
-
-                int size_before_pad = VectorizedCurve.size();
-                
-                for (int pad_c = size_before_pad; pad_c < 2*how_many_columns; pad_c++){
-                    VectorizedCurve.push_back(M);
-                }
-                
-                std::stringstream sso;
-                sso << Query_Array_Frechet[i]->id;
-                sso << " ";
-                for(size_t i = 0; i < VectorizedCurve.size(); ++i){
-                    if(i != 0)
-                        sso << " ";
-                    sso << VectorizedCurve[i];
-                }
-                string str_curve = sso.str();
-
                 VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, NUMBER_OF_HASH_TABLES);
                 vec2add->original_curve = Query_Array_Frechet[i];
-
-
-                /////////////////////////
-
 
                 Hash_Array[j]->calculateDistanceAndFindN(vec2add, r_array, i, NUMBER_OF_NEIGHBOURS, "Frechet");
                 
@@ -833,7 +749,6 @@ int main(int argc, char *argv[])
                 { //Add a idDistancePair object for every neighbor.
 
                     cout << "id " << Hash_Array[j]->neighboursInfoTable[i]->arrayId[k] << " dis " << Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k] << endl;
-                    //cout << " len " << Hash_Array[j]->neighboursInfoTable[i]->arrayId[k].length();
                     idDistancePair *Pair = new idDistancePair(Hash_Array[j]->neighboursInfoTable[i]->arrayId[k], Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k]);
                     if (Pair->getDistance() <= -1 )//|| Pair->getDistance() == 0 || Pair->getId() == " ")
                     {
@@ -842,8 +757,6 @@ int main(int argc, char *argv[])
                         break;
                     }
                     PairList.push_back(*Pair);
-                    //PairList[j] = Pair;
-                    //cout << "got " << endl;
                     delete Pair;
                 }
 
@@ -863,21 +776,33 @@ int main(int argc, char *argv[])
                 if (currNeighbours == NUMBER_OF_NEIGHBOURS)
                     break;
 
-                myLogFile << "Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "distanceFrechet: " << hitr1->getDistance() << endl;
+                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
+                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
+                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
+
+                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                if (curr_maf > last_maf){
+                    last_maf = curr_maf;
+                } 
+
                 currNeighbours++;
             }
 
-            myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
-            myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            //myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
+            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            tApproxSum += duration_NN.count();
+            tTrueSum += duration_BF.count();
 
             //reset the list for new q
             PairList.clear();
 
-            cout << "query end" << endl;            
+            //cout << "query end" << endl;            
         }
 
+        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
+        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
+        myLogFile << "MAF = " << last_maf << endl;
 
         //del stuff
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
@@ -894,7 +819,6 @@ int main(int argc, char *argv[])
         }
         delete[] Input_Array_Frechet;
 
-        //cout << "del" << endl;
         for (int i = 0; i < query_rows; i++)
         {
             delete Query_Array_Frechet[i];
@@ -922,103 +846,11 @@ int main(int argc, char *argv[])
         {
 
             double e = 0.5;
+            Input_Array_Frechet[i]->Filtering(e);
+            Input_Array_Frechet[i]->Snapping1d(delta);
+            Input_Array_Frechet[i]->MinMax();
+            string str_curve = Input_Array_Frechet[i]->Vectorization1d(how_many_columns, M);
             
-            Input_Array_Frechet[i]->filteredElementOneD.clear(); //TODO: MAYBE DEL? ALSO ADD IT FOR GRIDS
-            vector<double> v = Input_Array_Frechet[i]->arrayElementOneD;
-            
-            auto it = v.begin();
-            while (it != v.end()){
-                
-                if (it >= v.end() || it+1 >= v.end() || it+2 >= v.end()){
-                    break;
-                }
-
-                double a = *it;
-                double b = *(it+1);
-                double c = *(it+2);
-
-                // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
-
-                double res1 = abs(a-b);
-                double res2 = abs(b-c);
-
-                //it = it+3;
-                if (res1 <= e && res2 <= e){
-                    v.erase(it+1);
-                    //it = it+1;
-                }else{
-                    it = it+1;
-                }
-
-            }
-
-
-            Input_Array_Frechet[i]->filteredElementOneD = v;
-             
-
-            int filt_size = v.size(); 
-            for (int j = 0; j < filt_size; j++ ){
-    
-                double y = v[j];
-                double grid_y = floor(abs(y)/delta) * delta;   
-
-                Input_Array_Frechet[i]->gridElementOneD.push_back(grid_y);
-            }
-
-            
-
-            vector<double> v2 = Input_Array_Frechet[i]->gridElementOneD;
-            auto it2 = v2.begin();
-            while (it2 != v2.end()){
-                
-                if (it2 >= v2.end() || it2+1 >= v2.end() || it2+2 >= v2.end()){
-                    break;
-                }
-
-                double a = *it2;
-                double b = *(it2+1);
-                double c = *(it2+2);
-
-                double min_val = min(a,c);
-                double max_val = max(a,c);
-
-                // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
-
-                //it = it+3;
-                if (min_val <= b && max_val >= b){
-                    v2.erase(it2+1);
-                    //it = it+1;
-                }else{
-                    it2 = it2+1;
-                }
-
-
-            }
-            Input_Array_Frechet[i]->gridElementOneD = v2;
-
-            vector<double>  VectorizedCurve;
-            int grid_size = Input_Array_Frechet[i]->gridElementOneD.size();
-            for (int v = 0; v < grid_size ;v++ ){
-                
-                double y = Input_Array_Frechet[i]->gridElementOneD[v];
-                VectorizedCurve.push_back(y);
-            }
-
-            int size_before_pad = VectorizedCurve.size();
-            for (int pad_c = size_before_pad; pad_c < how_many_columns; pad_c++){
-                VectorizedCurve.push_back(M);
-            }
-            
-            std::stringstream sso;
-            sso << Input_Array_Frechet[i]->id;
-            sso << " ";
-            for(size_t i = 0; i < VectorizedCurve.size(); ++i){
-                if(i != 0)
-                    sso << " ";
-                sso << VectorizedCurve[i];
-            }
-            string str_curve = sso.str();
-
             VectorElement* vec2add = new VectorElement(how_many_columns, str_curve, NUMBER_OF_HASH_TABLES);
             vec2add->original_curve = Input_Array_Frechet[i];
             

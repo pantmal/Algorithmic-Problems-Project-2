@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     bool complete = false;
     bool silhouette_param = false; //TODO: FIX BOOLS
     string assigner = "Classic"; //method. Will use Classic for assignment if none provided.
-    string updater = "vec"; //TODO: Needs cases
+    string updater = "vector"; //TODO: Needs cases
 
     for (int i = 1; i < argc; i++){
 
@@ -388,13 +388,22 @@ int main(int argc, char *argv[])
 
     //Now moving on to output.
     if (assigner == "Classic"){
-        myLogFile << "Algorithm: Lloyds" << endl;
+        myLogFile << "Algorithm: Lloyds "<< endl;
     }
     else if (assigner == "Hypercube"){
-        myLogFile << "Algorithm: Range Search Hypercube" << endl;
+        myLogFile << "Algorithm: Range Search Hypercube "<< endl;
     }
-    else{
-        myLogFile << "Algorithm: Range Search LSH" << endl;
+    else if (assigner == "LSH"){
+        myLogFile << "Algorithm: Range Search LSH Vector"<< endl;
+    }else{
+        myLogFile << "Algorithm: Range Search LSH Frechet"<< endl;
+    }
+
+    if (updater == "vector"){
+        myLogFile << "Update: Mean Vector " << endl;
+    }
+    else if (assigner == "frechet"){
+        myLogFile << "Update: Mean Frechet " << endl;
     }
 
     for (int k1 = 0; k1 < clusters; k1++){

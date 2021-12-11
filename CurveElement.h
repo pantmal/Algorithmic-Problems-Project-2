@@ -34,6 +34,12 @@ public:
     {
         distanceCurrQ = x;
     }
+    void Snapping2d(double, double, double, int );
+    std::string Vectorization2d(int, int);
+    void Filtering(double);
+    void Snapping1d(double);
+    void MinMax();
+    std::string Vectorization1d(int, int);
     void setDistanceRandom();
     void displayId();
     void displayVectorElementArray();
