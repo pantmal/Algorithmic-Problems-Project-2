@@ -802,7 +802,7 @@ int main(int argc, char *argv[])
 
         myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        myLogFile << "MAF = " << last_maf << endl;
+        myLogFile << "MAF = " << last_maf << endl;//TODO
 
         //del stuff
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)

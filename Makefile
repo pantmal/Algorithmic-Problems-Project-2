@@ -2,13 +2,20 @@
 CC=g++
 
 CFLAGS=-c
-all: search cluster
+CU=-lcppunit
+all: search cluster utest
 
 search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o
 	$(CC) -o search SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o
 
 cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o
-	$(CC) -o cluster -O2 ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o
+	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o -O2
+
+utest: UnitTestMain.o TableF.o  Helpers.o IdDistancePair.o 
+	$(CC) -o utest UnitTestMain.o TableF.o Helpers.o IdDistancePair.o $(CU) -ldl
+
+UnitTestMain.o: UnitTestMain.cpp
+	$(CC) $(CFLAGS) $(CU) -ldl UnitTestMain.cpp
 
 SearchMain.o: SearchMain.cpp
 	$(CC) $(CFLAGS) SearchMain.cpp
@@ -50,4 +57,4 @@ Cluster.o: Cluster.cpp
 	$(CC) $(CFLAGS) Cluster.cpp
 
 clean:
-	rm -rf *o search cluster
+	rm -rf *o search cluster utest
