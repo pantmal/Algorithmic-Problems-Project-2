@@ -9,6 +9,7 @@
 #include <list>
 
 #include "VectorElement.h"
+#include "CurveElement.h"
 
 using namespace std;
 
@@ -21,12 +22,15 @@ public:
     int size;
     
     VectorElement* centroid;
+    CurveElement* centroid_frechet;
     list<VectorElement*> cluster_elements;
+    list<CurveElement*> frechet_elements;
     double silhouette_cluster;
 
 public:
 
     Cluster(VectorElement*, int);
+    Cluster(CurveElement*, int);
 
 };
 

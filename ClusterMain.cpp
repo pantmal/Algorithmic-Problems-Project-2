@@ -13,6 +13,7 @@
 //#include "Neighbours.h"
 //#include "HyperCube.h"
 #include "VectorElement.h"
+#include "CurveElement.h"
 #include "Helpers.h"
 #include "Cluster.h"
 #include "KMeans.h"
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(argv[i], "-update") == 0)
         {
-            if (strcmp(argv[i + 1], "Mean_Frechet") == 0)
+            if (strcmp(argv[i + 1], "Mean_Frechet") == 0) //TODO: Change this shit
             {
                 updater = "frechet";
             }
@@ -260,24 +261,51 @@ int main(int argc, char *argv[])
     myfile.clear();
 
     //And now initialize the VectorElement objects.
-    myfile.open(FILE_NAME_INPUT);
-    VectorElement **Input_Array = new VectorElement *[how_many_rows];
-    int i = 0;
-    if (myfile.is_open())
-    {
-        while (myfile)
+    VectorElement **Input_Array;
+    CurveElement **Input_Array_Frechet;
+
+    if (updater == "vector"){
+        myfile.open(FILE_NAME_INPUT);
+        Input_Array = new VectorElement *[how_many_rows];
+        int i = 0;
+        if (myfile.is_open())
         {
-            getline(myfile, mystring);
-            stringstream sso(mystring);
-            if (i < how_many_rows)
+            while (myfile)
             {
-                Input_Array[i] = new VectorElement(how_many_columns, mystring, 0);
-                i++;
+                getline(myfile, mystring);
+                stringstream sso(mystring);
+                if (i < how_many_rows)
+                {
+                    Input_Array[i] = new VectorElement(how_many_columns, mystring, 0);
+                    i++;
+                }
             }
         }
+        myfile.close();
+        myfile.clear();
+    }else{
+
+        myfile.open(FILE_NAME_INPUT);
+        Input_Array_Frechet = new CurveElement *[how_many_rows];
+        int i = 0;
+        if (myfile.is_open())
+        {
+            while (myfile)
+            {
+                getline(myfile, mystring);
+                stringstream sso(mystring);
+                if (i < how_many_rows)
+                {
+                    Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, 0,"discrete");
+                    i++;
+                }
+            }
+        }
+        myfile.close();
+        myfile.clear();
+
     }
-    myfile.close();
-    myfile.clear();
+
 
     //cout << "columns==== " << how_many_columns << endl;
     //cout << "rows==== " << how_many_rows << endl;
@@ -290,7 +318,12 @@ int main(int argc, char *argv[])
 
     //KMeans object is constructed and its centroid are initialized.
     KMeans kmeans_obj(assigner, updater,clusters);
-    kmeans_obj.initialization(Input_Array, how_many_rows);
+    if (updater == "vector"){
+        kmeans_obj.initialization(how_many_rows, Input_Array);
+    }else{
+        kmeans_obj.initialization_frechet(how_many_rows, Input_Array_Frechet);
+    }
+    
 
     //Setting up the HyperCube and LSHash objects if need be.
     int *r_array;
@@ -335,7 +368,7 @@ int main(int argc, char *argv[])
                 kmeans_obj.KMeans_Hash_Array[i]->insertItem(Input_Array[j], r_array);
             }
         }
-    }
+    }//TODO: more else
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
@@ -350,11 +383,16 @@ int main(int argc, char *argv[])
         
         //Assignment step
         if (kmeans_obj.assigner == "Classic"){
-            kmeans_obj.ClassicAssignment(Input_Array, how_many_rows);
+            if (kmeans_obj.updater == "vector"){
+                kmeans_obj.ClassicAssignment(Input_Array, how_many_rows);
+            }else{
+                kmeans_obj.ClassicAssignmentFrechet(Input_Array_Frechet, how_many_rows);
+            }
+            
         }
         else if (kmeans_obj.assigner == "Hypercube" || kmeans_obj.assigner == "LSH"){
             kmeans_obj.ReverseAssignment(Input_Array, how_many_rows);
-        }
+        }//TODO:ONE MORE ELSE
 
         //Update step
         if (kmeans_obj.updater == "vector"){
@@ -368,6 +406,7 @@ int main(int argc, char *argv[])
         for (int j = 0; j < how_many_rows; j++){
             Input_Array[j]->assigned = false;
             Input_Array[j]->assigned_clusters.clear();
+            //TODO: ONE MORE ELSE
         }
         if (i != (iterations-1)){
             
@@ -380,7 +419,7 @@ int main(int argc, char *argv[])
             }
             else if (kmeans_obj.assigner == "LSH"){
                 kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
-            }
+            }//TODO: ONE MORE ELSE
         }
     }
 
@@ -418,7 +457,15 @@ int main(int argc, char *argv[])
 
     //Getting silhouette scores for every cluster and a total one.
     if (silhouette_param){
-        double silhouette_total = kmeans_obj.silhouette(how_many_rows);
+        
+        double silhouette_total;
+        if (updater == "vector"){
+            silhouette_total = kmeans_obj.silhouette(how_many_rows);
+        }else{
+            silhouette_total = kmeans_obj.silhouette_frechet(how_many_rows);
+        }
+        
+        
         myLogFile << "Silhouette: [";
         for (int k1 = 0; k1 < clusters; k1++){
             

@@ -15,6 +15,9 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
     QueryTrickid = new unsigned int[numberOfHashTables]; //gets set when the vector element gets into an LSH bucket
     
+    //arrayElementTwoD.clear();
+    //arrayElementOneD.clear();
+
     id = "0";
     double temp;
     int counter = 0;
@@ -39,6 +42,24 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
         counter++;
     }
     
+
+}
+
+CurveElement::CurveElement(std::vector<std::tuple < int, double, int, double > >& traversal){
+
+
+    for (const auto &i : traversal){
+        int Px = get<0>(i);
+        double Py = get<1>(i);
+        int Qx = get<2>(i);
+        double Qy = get<3>(i);
+
+        int mean_x = (Px + Qx) / 2;
+        double mean_y = (Py + Qy) / 2;
+
+        arrayElementTwoD.push_back({mean_x,mean_y});
+    }
+
 
 }
 
@@ -243,10 +264,10 @@ void CurveElement::displayVectorElementArray()
 void CurveElement::displayVectorElementGrid()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;
-    for(const auto &i : gridElementTwoD)
+    for(const auto &i : arrayElementTwoD)
         myLogFile<<get<0>(i)<<"  "<<get<1>(i) <<endl;
 
-    myLogFile << "size " << gridElementTwoD.size() << endl;
+    myLogFile << "size " << arrayElementTwoD.size() << endl;
 }
 
 

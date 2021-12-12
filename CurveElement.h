@@ -29,6 +29,7 @@ public:
 
 public:
     CurveElement(int, std::string, int,std::string);
+    CurveElement(std::vector<std::tuple < int, double, int, double > >& traversal);
     ~CurveElement();
     void setDistance(int x)
     {

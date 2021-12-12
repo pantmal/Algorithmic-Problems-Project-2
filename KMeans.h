@@ -34,11 +34,14 @@ class KMeans{
     public:
 
         KMeans(string, string, int);
-        void initialization(VectorElement** , int );
+        void initialization(int, VectorElement**);
+        void initialization_frechet(int, CurveElement**);
         void ClassicAssignment(VectorElement**, int);
-        void ReverseAssignment(VectorElement**, int );
+        void ClassicAssignmentFrechet(CurveElement**, int);
+        void ReverseAssignment(VectorElement**, int );//TODO:ONE MORE
         void update_vec(int);
         double silhouette(int);
+        double silhouette_frechet(int);
         ~KMeans();
 
 };

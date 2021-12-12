@@ -1,8 +1,9 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 #include <list>
-#include "IdDistancePair.h"
 #include <string>
+
+#include "IdDistancePair.h"
 
 //Output file is set to extern because it helps when we want to output stuff from many different files.
 extern std::ofstream myLogFile;
@@ -21,8 +22,6 @@ bool cmpListPairR(idDistancePair &, idDistancePair &);
 int string_into_int(std::string &s);
 int args_string_to_int(std::string &x);
 double args_string_to_double(std::string &x);
-double min_3(double x, double y, double z);
-double discreteFrechet(int i, int j, std::vector<std::tuple<int,double>> v1, std::vector<std::tuple<int,double>> v2);
 int testL2();
 
 #endif /* HELPERS_H */

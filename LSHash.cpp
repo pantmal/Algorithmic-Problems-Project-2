@@ -13,6 +13,7 @@
 #include "VectorElement.h"
 #include "Helpers.h"
 #include "Neighbours.h"
+#include "DiscreteFrechet.h"
 
 using namespace std;
 
@@ -158,7 +159,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
       CurveElement* query_curve = q->original_curve;
 
       int d = input_curve->arrayElementTwoD.size();
-      double dfd = discreteFrechet(d-1,d-1,input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);     
+      double dfd = ret_DFD(d,d, input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);
 
       vobj->currentDFD = dfd;
     }

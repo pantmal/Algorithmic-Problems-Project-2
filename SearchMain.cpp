@@ -22,6 +22,7 @@
 #include "HyperCube.h"
 #include "Helpers.h"
 #include "IdDistancePair.h"
+#include "DiscreteFrechet.h"
 
 using namespace std;
 
@@ -36,11 +37,11 @@ int main(int argc, char *argv[])
     int M = -1;
     int probes = -1;
     int NUMBER_OF_HASH_TABLES = -1;
-    int NUMBER_OF_NEIGHBOURS = 1; //TODO: Check possible errs
+    int NUMBER_OF_NEIGHBOURS = 1; //Check possible errs
     double RANGE = -1.0;
     double delta = -1.0;
     string algorithm = "LSH";
-    string metric = "discrete"; //TODO: may take cases later on
+    string metric = "discrete";
 
     for (int i = 1; i < argc; i++)
     {
@@ -166,16 +167,16 @@ int main(int argc, char *argv[])
             k_input = 4;
         }else if (algorithm == "Hypercube"){
             k_input = 14;
-        }//TODO: else??
+        }
     }
     if (NUMBER_OF_HASH_TABLES == -1)
         NUMBER_OF_HASH_TABLES = 5; //PARAM <L>
     if (M == -1)
-        M = 10; //PARAM <L>
+        M = 10; //PARAM <M>
     if (probes == -1)
-        probes = 2; //PARAM <N>
+        probes = 2; //PARAM <probes>
     if (delta == -1.0)
-        delta = 5; //PARAM <N>
+        delta = 5; //PARAM <delta>
     
 
     // cout << "FILE_NAME_INPUT: " << FILE_NAME_INPUT << endl;
@@ -236,8 +237,8 @@ int main(int argc, char *argv[])
     myfile.close();
     myfile.clear();
 
-    myLogFile << "columns==== " << how_many_columns << endl;
-    myLogFile << "rows==== " << how_many_rows << endl;
+    cout << "columns==== " << how_many_columns << endl;
+    cout << "rows==== " << how_many_rows << endl;
     //--------DATA COLLECTED----------
 
     //Save the query items.
@@ -655,6 +656,16 @@ int main(int argc, char *argv[])
         cout << "Program has successfully completed and written its results to the output file." << endl;
     
     }else if (algorithm == "Frechet" && metric == "discrete"){
+ 
+        
+        // for (int i = 0; i < how_many_rows; i++){
+        // //int i = 700;
+        // //     discreteFrechet(table, how_many_columns,how_many_columns,Query_Array_Frechet[0]->arrayElementTwoD,Input_Array_Frechet[i]->arrayElementTwoD);     
+        // //     optimalTraversal(table, how_many_columns,how_many_columns,Query_Array_Frechet[0]->arrayElementTwoD,Input_Array_Frechet[i]->arrayElementTwoD);
+        // CurveElement* Mean_Curve = MeanCurve(Query_Array_Frechet[0],Input_Array_Frechet[i]);
+        //         Mean_Curve->displayVectorElementGrid();
+        //         myLogFile << "end of curve" << endl;
+        // }
 
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
@@ -688,7 +699,7 @@ int main(int argc, char *argv[])
                 
                 Hash_Array[l]->insertItem(vec2add, r_array);
                 
-                //TODO: delete vec2add, and the arrays ALSO ADD FUNCS;
+                //TODO: delete vec2add, ALSO refactor
                 Input_Array_Frechet[i]->gridElementTwoD.clear();    
                 //myLogFile << "END OF ARR" << endl;
             }
@@ -720,7 +731,7 @@ int main(int argc, char *argv[])
             {
 
                 //double dfd = 0.0; //skipping true calculations
-                double dfd = discreteFrechet(how_many_columns-1,how_many_columns-1,Input_Array_Frechet[l]->arrayElementTwoD,Query_Array_Frechet[i]->arrayElementTwoD);     
+                double dfd = ret_DFD(how_many_columns,how_many_columns, Input_Array_Frechet[l]->arrayElementTwoD,Query_Array_Frechet[i]->arrayElementTwoD);
 
                 idDistancePair *Pair = new idDistancePair(Input_Array_Frechet[l]->id, dfd);
                 PairListBF.push_back(*Pair);
@@ -748,11 +759,11 @@ int main(int argc, char *argv[])
                 for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
                 { //Add a idDistancePair object for every neighbor.
 
-                    cout << "id " << Hash_Array[j]->neighboursInfoTable[i]->arrayId[k] << " dis " << Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k] << endl;
+                    //cout << "id " << Hash_Array[j]->neighboursInfoTable[i]->arrayId[k] << " dis " << Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k] << endl;
                     idDistancePair *Pair = new idDistancePair(Hash_Array[j]->neighboursInfoTable[i]->arrayId[k], Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k]);
                     if (Pair->getDistance() <= -1 )//|| Pair->getDistance() == 0 || Pair->getId() == " ")
                     {
-                        cout<< "? "<< endl;
+                    //    cout<< "? "<< endl;
                         delete Pair;
                         break;
                     }

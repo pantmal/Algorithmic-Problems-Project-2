@@ -5,13 +5,13 @@ CFLAGS=-c
 CU=-lcppunit
 all: search cluster utest
 
-search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o
-	$(CC) -o search SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o
+search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o
+	$(CC) -o search SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o
 
-cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o
-	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o -O2
+cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o
+	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o -O2
 
-utest: UnitTestMain.o TableF.o  Helpers.o IdDistancePair.o 
+utest: UnitTestMain.o TableF.o Helpers.o IdDistancePair.o
 	$(CC) -o utest UnitTestMain.o TableF.o Helpers.o IdDistancePair.o $(CU) -ldl
 
 UnitTestMain.o: UnitTestMain.cpp
@@ -55,6 +55,9 @@ KMeans.o: KMeans.cpp
 
 Cluster.o: Cluster.cpp
 	$(CC) $(CFLAGS) Cluster.cpp
+
+DiscreteFrechet.o: DiscreteFrechet.cpp
+	$(CC) $(CFLAGS) DiscreteFrechet.cpp
 
 clean:
 	rm -rf *o search cluster utest
