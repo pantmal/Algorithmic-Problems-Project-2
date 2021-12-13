@@ -16,7 +16,7 @@ public:
     std::vector<std::tuple<unsigned int,double>> arrayElementTwoD;
     std::vector<double>  arrayElementOneD;
     
-    std::vector<std::tuple<int,double>> gridElementTwoD;
+    std::vector<std::tuple<int,double>> gridElementTwoD;//TODO: CHANGE IF ISSUE
     std::vector<double>  gridElementOneD;
 
     std::vector<double>  filteredElementOneD;
@@ -38,7 +38,7 @@ public:
     void Snapping2d(double, double, double, int );
     std::string Vectorization2d(int, int);
     void Filtering(double);
-    void Snapping1d(double);
+    void Snapping1d(double, double);
     void MinMax();
     std::string Vectorization1d(int, int);
     void setDistanceRandom();

@@ -5,11 +5,11 @@ CFLAGS=-c
 CU=-lcppunit
 all: search cluster utest
 
-search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o
-	$(CC) -o search SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o -O2
+search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o config.o curve.o frechet.o interval.o point.o simplification.o
+	$(CC) -o search SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o Helpers.o VectorElement.o CurveElement.o DiscreteFrechet.o config.o curve.o frechet.o interval.o point.o simplification.o -O2
 
-cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o
-	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o -O2
+cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o config.o curve.o frechet.o interval.o point.o simplification.o
+	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o config.o curve.o frechet.o interval.o point.o simplification.o -O2
 
 utest: UnitTestMain.o TableF.o Helpers.o IdDistancePair.o
 	$(CC) -o utest UnitTestMain.o TableF.o Helpers.o IdDistancePair.o $(CU) -ldl
@@ -24,7 +24,7 @@ DiscreteFrechet.o: DiscreteFrechet.cpp
 	$(CC) $(CFLAGS) -O2 DiscreteFrechet.cpp
 
 LSHash.o: LSHash.cpp
-	$(CC) $(CFLAGS) LSHash.cpp
+	$(CC) $(CFLAGS) -O2 LSHash.cpp
 
 Neighbours.o: Neighbours.cpp
 	$(CC) $(CFLAGS) Neighbours.cpp
@@ -61,6 +61,24 @@ Cluster.o: Cluster.cpp
 
 TreeNode.o: TreeNode.cpp
 	$(CC) $(CFLAGS) -O2 TreeNode.cpp
+
+config.o: config.cpp
+	$(CC) $(CFLAGS) config.cpp
+
+curve.o: curve.cpp
+	$(CC) $(CFLAGS) curve.cpp
+
+frechet.o: frechet.cpp
+	$(CC) $(CFLAGS) frechet.cpp
+
+interval.o: interval.cpp
+	$(CC) $(CFLAGS) interval.cpp
+
+point.o: point.cpp
+	$(CC) $(CFLAGS) point.cpp
+
+simplification.o: simplification.cpp
+	$(CC) $(CFLAGS) simplification.cpp
 
 clean:
 	rm -rf *o search cluster utest

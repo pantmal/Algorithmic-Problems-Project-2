@@ -657,16 +657,6 @@ int main(int argc, char *argv[])
     
     }else if (algorithm == "Frechet" && metric == "discrete"){
  
-        
-        // for (int i = 0; i < how_many_rows; i++){
-        // //int i = 700;
-        // //     discreteFrechet(table, how_many_columns,how_many_columns,Query_Array_Frechet[0]->arrayElementTwoD,Input_Array_Frechet[i]->arrayElementTwoD);     
-        // //     optimalTraversal(table, how_many_columns,how_many_columns,Query_Array_Frechet[0]->arrayElementTwoD,Input_Array_Frechet[i]->arrayElementTwoD);
-        // CurveElement* Mean_Curve = MeanCurve(Query_Array_Frechet[0],Input_Array_Frechet[i]);
-        //         Mean_Curve->displayVectorElementGrid();
-        //         myLogFile << "end of curve" << endl;
-        // }
-
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
         uniform_int_distribution<> UM(0, INT_MAX-1000000);
@@ -681,7 +671,7 @@ int main(int argc, char *argv[])
             unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
             default_random_engine e(seed);
             
-            int open_d = delta - 1;          
+            double open_d = delta - 1;          
             uniform_real_distribution<> U(0.0, open_d);
             double t1 = U(e);
             double t2 = U(e);
@@ -851,14 +841,19 @@ int main(int argc, char *argv[])
         uniform_int_distribution<> UM(0, INT_MAX-1000000);
         int M = UM(e);
         cout << M << endl;
-       
+
+        double open_d = delta - 1; 
+        uniform_real_distribution<> U(0.0, open_d);
+        double t1 = U(e);
+        //Hash_Obj.t1 = t1;
         
         for (int i = 0; i < how_many_rows; i++)
         {
 
-            double e = 0.5;
+            double e = 3;
             Input_Array_Frechet[i]->Filtering(e);
-            Input_Array_Frechet[i]->Snapping1d(delta);
+            cout<<"size" << Input_Array_Frechet[i]->filteredElementOneD.size() << endl;
+            Input_Array_Frechet[i]->Snapping1d(t1,delta);
             Input_Array_Frechet[i]->MinMax();
             string str_curve = Input_Array_Frechet[i]->Vectorization1d(how_many_columns, M);
             
@@ -870,7 +865,121 @@ int main(int argc, char *argv[])
             //myLogFile << "END OF ARR" << endl;
         }
 
-       
+        double tTrueSum = 0.0;
+        double tApproxSum = 0.0;
+        double last_maf = -1.0;
+        //And now for each query...
+        list<idDistancePair> PairList;
+        for (int i = 0; i < query_rows; i++)
+        {
+            myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
+            myLogFile << "Algorithm: LSH_Frechet_Continuous " << endl;
+
+            double e = 3;
+            Query_Array_Frechet[i]->Filtering(e);
+            cout<<"size" << Query_Array_Frechet[i]->filteredElementOneD.size() << endl;
+
+            //First get the actual N neighbors with brute force check
+            list<idDistancePair> PairListBF;
+            std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
+
+            using clock = std::chrono::system_clock;
+            using sec = std::chrono::duration<double>;
+
+            const auto before_BF = clock::now();
+            for (int l = 0; l < how_many_rows; l++)
+            {
+                //Input_Array[l]->getL2Distance(Query_Array[i]);
+                double cfd = ret_CFD(Input_Array_Frechet[l],Query_Array_Frechet[i]);
+
+                idDistancePair *Pair = new idDistancePair(Input_Array_Frechet[l]->id, cfd);
+                PairListBF.push_back(*Pair);
+                delete Pair;
+            }
+            PairListBF.sort(cmpListPair);
+            const sec duration_BF = clock::now() - before_BF;
+
+            //Now find the approx N neighbors with Hypercube
+            const auto before_NN = clock::now();
+
+            //double t1 = Hash_Obj.t1;
+            Query_Array_Frechet[i]->Snapping1d(t1,delta);
+            Query_Array_Frechet[i]->MinMax();
+            string str_curve = Query_Array_Frechet[i]->Vectorization1d(how_many_columns, M);
+            
+            VectorElement* vec2add = new VectorElement(how_many_columns, str_curve, NUMBER_OF_HASH_TABLES);
+            vec2add->original_curve = Query_Array_Frechet[i];
+    
+            Hash_Obj.calculateDistanceAndFindN(vec2add, r_array, i, NUMBER_OF_NEIGHBOURS, "Frechet_Cont");
+                
+            for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
+            { //Add a idDistancePair object for every neighbor.
+
+                idDistancePair *Pair = new idDistancePair(Hash_Obj.neighboursInfoTable[i]->arrayId[k], Hash_Obj.neighboursInfoTable[i]->arrayDistance[k]);
+                if (Pair->getDistance() <= -1 )//|| Pair->getDistance() == 0 || Pair->getId() == " ")
+                {
+                    delete Pair;
+                    break;
+                }
+                PairList.push_back(*Pair);
+                delete Pair;
+            }
+            PairList.sort(cmpListPair);                                //sort the list to get nearest values first.
+            const sec duration_NN = clock::now() - before_NN;
+
+            //coutLineWithMessage("NEAREST NEIGHBOURS ARE: ");
+
+            //Output of NN search.
+            int currNeighbours = 0;
+            list<idDistancePair>::iterator hitr1 = PairList.begin();
+            list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
+            for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
+            {
+                if (currNeighbours == NUMBER_OF_NEIGHBOURS)
+                    break;
+
+                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
+                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
+                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
+                myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
+
+                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                if (curr_maf > last_maf){
+                    last_maf = curr_maf;
+                } 
+
+                currNeighbours++;
+            }
+
+            tApproxSum += duration_NN.count();
+            tTrueSum += duration_BF.count();
+
+        }
+
+        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
+        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
+        myLogFile << "MAF = " << last_maf << endl;
+
+        //---DELETE MEMORY---
+
+        for (int i = 0; i < how_many_rows; i++)
+        {
+            delete Input_Array_Frechet[i];
+        }
+        delete[] Input_Array_Frechet;
+
+        for (int i = 0; i < query_rows; i++)
+        {
+            delete Query_Array_Frechet[i];
+        }
+
+        delete[] Query_Array_Frechet;
+
+        myLogFile.close();
+
+        cout << "Program has successfully completed and written its results to the output file." << endl;
+
+
 
     }
 

@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "VectorElement.h"
+#include "CurveElement.h"
 #include "Helpers.h"
 #include "Neighbours.h"
 
@@ -63,10 +64,17 @@ public:
         return L->currentDFD < R->currentDFD;
     }
 
+    static bool cmpCFD(VectorElement *L, VectorElement *R)
+    {
+        return L->currentCFD < R->currentCFD;
+    }
+
     int AmplifiedHashFunction(VectorElement *x, int *r_array);
     void displayHash();
 
     ~LSHash();
 };
+
+double ret_CFD(CurveElement*,CurveElement*);
 
 #endif /* LSHASH_H */

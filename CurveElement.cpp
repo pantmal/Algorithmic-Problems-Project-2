@@ -169,13 +169,13 @@ void CurveElement::Filtering(double e){
 
 }
 
-void CurveElement::Snapping1d(double delta){
+void CurveElement::Snapping1d(double t, double delta){
 
     int filt_size = filteredElementOneD.size(); 
     for (int j = 0; j < filt_size; j++ ){
 
         double y = filteredElementOneD[j];
-        double grid_y = floor(abs(y)/delta) * delta;   
+        double grid_y = floor(abs(y)+t/delta) * delta;
 
         gridElementOneD.push_back(grid_y);
     }
@@ -267,7 +267,7 @@ void CurveElement::displayVectorElementGrid()
     for(const auto &i : arrayElementTwoD)
         myLogFile<<get<0>(i)<<"  "<<get<1>(i) <<endl;
 
-    myLogFile << "size " << arrayElementTwoD.size() << endl;
+    //myLogFile << "size " << arrayElementTwoD.size() << endl;
 }
 
 

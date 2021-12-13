@@ -25,6 +25,7 @@ public:
 
     CurveElement* original_curve;
     double currentDFD;
+    double currentCFD;
 
 public:
     VectorElement(int, std::string, int);
