@@ -20,7 +20,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
     id = "0";
     double temp;
-    int counter = 0;
+    unsigned int counter = 0;
     distanceCurrQ = 0;
     
     size = dimensions;
@@ -45,16 +45,16 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
 }
 
-CurveElement::CurveElement(std::vector<std::tuple < int, double, int, double > >& traversal){
+CurveElement::CurveElement(std::vector<std::tuple <unsigned int, double, unsigned int, double > >& traversal){
 
 
     for (const auto &i : traversal){
-        int Px = get<0>(i);
+        unsigned int Px = get<0>(i);
         double Py = get<1>(i);
-        int Qx = get<2>(i);
+        unsigned int Qx = get<2>(i);
         double Qy = get<3>(i);
 
-        int mean_x = (Px + Qx) / 2;
+        unsigned int mean_x = (Px + Qx) / 2;
         double mean_y = (Py + Qy) / 2;
 
         arrayElementTwoD.push_back({mean_x,mean_y});

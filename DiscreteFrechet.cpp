@@ -12,6 +12,8 @@
 
 using namespace std;
 
+//TODO: leave cases for unsigned
+
 double min_3(double x, double y, double z)
 {
     return std::min(std::min(x, y), z);
@@ -35,7 +37,7 @@ double pointL2(double x1, double y1, double x2, double y2)
     return sqrt(distance);
 }
 
-void discreteFrechet(double **table, int i, int j, vector<tuple<int,double>> v1, vector<tuple<int,double>> v2) //how_many_columns -1 
+void discreteFrechet(double **table, int i, int j, vector<tuple<unsigned int,double>> v1, vector<tuple<unsigned int,double>> v2) //how_many_columns -1 
 {
     //double table[i][j]{-1.0};
 
@@ -103,7 +105,7 @@ void discreteFrechet(double **table, int i, int j, vector<tuple<int,double>> v1,
     //return table;//[i-1][j-1];
 }
 
-double ret_DFD(int i, int j, vector<tuple<int,double>> v1, vector<tuple<int,double>> v2){
+double ret_DFD(int i, int j, vector<tuple<unsigned int,double>> v1, vector<tuple<unsigned int,double>> v2){
 
 
     double **table = new double *[i];
@@ -143,7 +145,7 @@ int minIndex(double x, double y, double z)
     return -1;
 }
 
-void optimalTraversal(vector<tuple < int, double, int, double > >& traversal, double **table, int m1, int m2, std::vector<std::tuple<int,double>> v1, std::vector<std::tuple<int,double>> v2){
+void optimalTraversal(vector<tuple <unsigned int, double,unsigned int, double > >& traversal, double **table, int m1, int m2, std::vector<std::tuple<unsigned int,double>> v1, std::vector<std::tuple<unsigned int,double>> v2){
 
 
     int index;
@@ -207,7 +209,14 @@ void optimalTraversal(vector<tuple < int, double, int, double > >& traversal, do
 
 CurveElement* MeanCurve(CurveElement* P, CurveElement* Q){
 
-    //if q is null...
+
+    if (Q==NULL){
+        return P;
+    }
+
+    if (P == NULL && Q == NULL){
+        return NULL;
+    }
 
     int i = P->arrayElementTwoD.size();
     
@@ -216,7 +225,7 @@ CurveElement* MeanCurve(CurveElement* P, CurveElement* Q){
 
     discreteFrechet(table,i,i,P->arrayElementTwoD,Q->arrayElementTwoD);         
 
-    vector<tuple < int, double, int, double > > traversal;
+    vector<tuple < unsigned int, double, unsigned int, double > > traversal;
     optimalTraversal(traversal,table,i,i,P->arrayElementTwoD,Q->arrayElementTwoD);
     //myLogFile << traversal.size() << endl;
 

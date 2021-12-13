@@ -40,6 +40,7 @@ class KMeans{
         void ClassicAssignmentFrechet(CurveElement**, int);
         void ReverseAssignment(VectorElement**, int );//TODO:ONE MORE
         void update_vec(int);
+        void update_curve();
         double silhouette(int);
         double silhouette_frechet(int);
         ~KMeans();

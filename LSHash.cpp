@@ -159,6 +159,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
       CurveElement* query_curve = q->original_curve;
 
       int d = input_curve->arrayElementTwoD.size();
+      //double dfd = 0.0;
       double dfd = ret_DFD(d,d, input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);
 
       vobj->currentDFD = dfd;

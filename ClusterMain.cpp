@@ -378,8 +378,8 @@ int main(int argc, char *argv[])
     const auto before = clock::now();
 
     //Hardcoded value for clustering iterations.
-    int iterations = 7;
-    for (int i = 0; i < iterations; i++){ 
+    //int iterations = 7;
+    //for (int i = 0; i < iterations; i++){ 
         
         //Assignment step
         if (kmeans_obj.assigner == "Classic"){
@@ -397,31 +397,31 @@ int main(int argc, char *argv[])
         //Update step
         if (kmeans_obj.updater == "vector"){
             kmeans_obj.update_vec(how_many_columns);
-        }//else{
-        //    
-        //}
+        }else{
+            kmeans_obj.update_curve();
+        }
         
 
         //Clearing up some valus for the next pass.
-        for (int j = 0; j < how_many_rows; j++){
-            Input_Array[j]->assigned = false;
-            Input_Array[j]->assigned_clusters.clear();
-            //TODO: ONE MORE ELSE
-        }
-        if (i != (iterations-1)){
+        // for (int j = 0; j < how_many_rows; j++){
+        //     Input_Array[j]->assigned = false;
+        //     Input_Array[j]->assigned_clusters.clear();
+        //     //TODO: ONE MORE ELSE
+        // }
+        // if (i != (iterations-1)){
             
-            for (int k1 = 0; k1 < clusters; k1++){
-                kmeans_obj.ClusterArray[k1]->cluster_elements.clear();
-            }
+        //     for (int k1 = 0; k1 < clusters; k1++){
+        //         kmeans_obj.ClusterArray[k1]->cluster_elements.clear();
+        //     }
 
-            if (kmeans_obj.assigner == "Hypercube"){ 
-                kmeans_obj.KMeans_Hyper->assigned_total = 0;
-            }
-            else if (kmeans_obj.assigner == "LSH"){
-                kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
-            }//TODO: ONE MORE ELSE
-        }
-    }
+        //     if (kmeans_obj.assigner == "Hypercube"){ 
+        //         kmeans_obj.KMeans_Hyper->assigned_total = 0;
+        //     }
+        //     else if (kmeans_obj.assigner == "LSH"){
+        //         kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
+        //     }//TODO: ONE MORE ELSE
+        // }
+    //}
 
     const sec duration = clock::now() - before; //Getting clustering time
 
@@ -445,14 +445,15 @@ int main(int argc, char *argv[])
         myLogFile << "Update: Mean Frechet " << endl;
     }
 
-    for (int k1 = 0; k1 < clusters; k1++){
+    // for (int k1 = 0; k1 < clusters; k1++){
 
-        myLogFile << "CLUSTER-" << (k1 + 1) << " {";
-        int size = kmeans_obj.ClusterArray[k1]->cluster_elements.size();
-        myLogFile << "size: " << size << ", centroid: [";
-        kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
-        myLogFile << "]" << endl;
-    }
+    //     myLogFile << "CLUSTER-" << (k1 + 1) << " {";
+    //     int size = kmeans_obj.ClusterArray[k1]->cluster_elements.size();
+    //     myLogFile << "size: " << size << ", centroid: [";
+    //     kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
+    //     TODO: Needs case
+    //     myLogFile << "]" << endl;
+    // }
     myLogFile << "clustering_time: " << duration.count() << "[s]" << endl;
 
     //Getting silhouette scores for every cluster and a total one.
@@ -501,11 +502,20 @@ int main(int argc, char *argv[])
 
     //---DELETE MEMORY---
 
-    for (int i = 0; i < how_many_rows; i++)
-    {
-        delete Input_Array[i];
+    if (updater == "vector"){
+        for (int i = 0; i < how_many_rows; i++)
+        {
+            delete Input_Array[i];
+        }
+        delete[] Input_Array;
+    }else{
+        for (int i = 0; i < how_many_rows; i++)
+        {
+            delete Input_Array_Frechet[i];
+        }
+        delete[] Input_Array_Frechet;
     }
-    delete[] Input_Array;
+    
 
     if (kmeans_obj.assigner == "Hypercube")
     {

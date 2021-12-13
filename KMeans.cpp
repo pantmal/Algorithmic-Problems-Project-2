@@ -14,6 +14,7 @@
 #include "CurveElement.h"
 #include "DiscreteFrechet.h"
 #include "Helpers.h"
+#include "TreeNode.h"
 
 //KMeans constructor setting assigner method and cluster num
 KMeans::KMeans(string assigner_arg, string updater_arg, int clusters_arg){
@@ -471,6 +472,56 @@ void KMeans::update_vec(int columns){
     }
 
 
+
+}
+
+void KMeans::update_curve(){
+
+    
+    unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
+    default_random_engine e(seed);
+
+
+    for (int k = 0; k < clusters; k++){
+
+        int list_size = ClusterArray[k]->frechet_elements.size();
+        double log_res = log2(list_size);
+        int height = ceil(log_res);
+
+        int tree_size = pow(2,height+1) - 1;
+        int max_leaves = pow(2,height);
+        
+        if (max_leaves != list_size){
+            int removed_nodes = max_leaves - list_size;
+            tree_size = tree_size - removed_nodes;
+        }
+
+        cout << "here " << list_size <<" " << height << " " << tree_size << endl;
+        TreeNode* MeanCurveTree = MeanCurveTree->AddNode(MeanCurveTree,0,tree_size);
+        
+        list<CurveElement *> cluster_copy = ClusterArray[k]->frechet_elements;
+
+        while(!cluster_copy.empty()){
+            //cout << "ll size " << ll.size() << endl;
+            uniform_int_distribution<> U(0, cluster_copy.size() - 1);
+            int random_element = U(e);
+            
+            //Find the item in the list and remove it. We only check each probe once.
+            list<CurveElement* >::iterator it = cluster_copy.begin();
+            advance(it, random_element);
+            CurveElement* item = *it;
+            cluster_copy.erase(it);
+            
+            MeanCurveTree->AddCurve(MeanCurveTree,item); 
+        }
+
+        //cout << "here f" << endl;
+
+        CurveElement* final_mean = MeanCurveTree->MeanCurveTraversal(MeanCurveTree);
+        final_mean->displayVectorElementGrid();
+        myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
+        cout << "here f" << endl;
+    }
 
 }
 

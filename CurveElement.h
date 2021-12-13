@@ -13,7 +13,7 @@ class CurveElement
 public:
     std::string id; //name/id of the element
     int size;
-    std::vector<std::tuple<int,double>> arrayElementTwoD;
+    std::vector<std::tuple<unsigned int,double>> arrayElementTwoD;
     std::vector<double>  arrayElementOneD;
     
     std::vector<std::tuple<int,double>> gridElementTwoD;
@@ -29,7 +29,7 @@ public:
 
 public:
     CurveElement(int, std::string, int,std::string);
-    CurveElement(std::vector<std::tuple < int, double, int, double > >& traversal);
+    CurveElement(std::vector<std::tuple <unsigned int, double,unsigned int, double > >& traversal);
     ~CurveElement();
     void setDistance(int x)
     {
