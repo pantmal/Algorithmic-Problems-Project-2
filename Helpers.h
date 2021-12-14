@@ -4,6 +4,7 @@
 #include <string>
 
 #include "IdDistancePair.h"
+#include "CurveElement.h"
 
 //Output file is set to extern because it helps when we want to output stuff from many different files.
 extern std::ofstream myLogFile;
@@ -23,5 +24,6 @@ int string_into_int(std::string &s);
 int args_string_to_int(std::string &x);
 double args_string_to_double(std::string &x);
 int testL2();
+double ret_CFD(CurveElement*,CurveElement*);
 
 #endif /* HELPERS_H */

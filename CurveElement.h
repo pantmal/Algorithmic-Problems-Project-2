@@ -43,6 +43,7 @@ public:
     std::string Vectorization1d(int, int);
     void setDistanceRandom();
     void displayId();
+    void displayVectorElementArray2D(); //clust
     void displayVectorElementArray();
     void displayVectorElementGrid();
     void displayDistanceCurrQ();

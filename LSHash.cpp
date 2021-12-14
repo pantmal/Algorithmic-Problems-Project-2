@@ -15,56 +15,9 @@
 #include "Neighbours.h"
 #include "DiscreteFrechet.h"
 
-#include "config.hpp"
-#include "curve.hpp"
-#include "frechet.hpp"
-#include "interval.hpp"
-#include "point.hpp"
-#include "simplification.hpp"
-#include "types.hpp"
-
 using namespace std;
 
 int LSHash::hashNumber = 0;
-
-double ret_CFD(CurveElement* input, CurveElement* query){
-
-  
-  Points v1_points(1);
-  
-  for (int i = 0; i < input->filteredElementOneD.size(); i++){
-      Point p(1); //= new Point(1);
-      p.set(0,input->filteredElementOneD[i]);
-      v1_points.add(p);
-  }
-
-  //vector<double> v2 = input->filteredElementOneD;
-
-  Points v2_points(1);
-
-  for (int i = 0; i < query->filteredElementOneD.size(); i++){
-      Point p(1);// = new Point(1);
-      p.set(0,query->filteredElementOneD[i]);
-      v2_points.add(p);
-  }
-
-  Curve* c1 = new Curve(v1_points,"input");
-  Curve* c2 = new Curve(v2_points,"query");
-
-  Frechet::Continuous::Distance cont_dist = Frechet::Continuous::distance(*c1, *c2);
-
-  delete c1;
-  delete c2;
-
-  double dist = cont_dist.value;
-
-  //cout<< "dist is " << dist << endl;
-
-  return dist;
-
-}
-
-
 
 //LSHash constructor
 LSHash::LSHash(int b, int v_size, int k_arg, int w_arg)
@@ -257,7 +210,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
 }
 
 //Similar searching for Range
-void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range) //j=no of query
+void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, string algorithm) //j=no of query
 {
   //TODO: ADD LSH FRECH
   int index = AmplifiedHashFunction(q, r_array);
@@ -275,29 +228,75 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range) //
   for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
   {
     VectorElement *vobj = *hitr1;
-    vobj->getL2Distance(q);
+    
+    if (algorithm == "LSH"){
+      vobj->getL2Distance(q);
+    }else{
+      vobj->currentDFD = 0.0;
+      CurveElement* input_curve = vobj->original_curve;
+      CurveElement* query_curve = q->original_curve;  
+      
+      int d = input_curve->arrayElementTwoD.size();
+      //double dfd = 0.0;
+      double dfd = ret_DFD(d,d, input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);
+      vobj->currentDFD = dfd;
+
+    }
+    
   }
-  table[index].sort(cmp);
+
+  if (algorithm == "LSH"){
+    table[index].sort(cmp);
+  }else{
+    table[index].sort(cmpDFD);
+  }
+
+
 
   for (hitr2 = table[index].begin(); hitr2 != table[index].end(); ++hitr2)
   {
 
     VectorElement *vobj = *hitr2;
-    if (vobj->distanceCurrQ <= range)
-    {
+    if (algorithm == "LSH"){
+      
+      if (vobj->distanceCurrQ <= range)
+      {
+        if (cluster_mode == true && vobj->assigned == true) continue;
 
-      if (cluster_mode == true && vobj->assigned == true)
-        continue;
+        range_list.push_back(vobj);
 
-      range_list.push_back(vobj);
-
-      if (cluster_mode == true)
-      { //Used in clustering Reverse assignment only
-        vobj->assigned = true;
-        vobj->assigned_clusters.push_back(current_cluster);
-        assigned_total++;
+        if (cluster_mode == true)
+        { //Used in clustering Reverse assignment only
+          vobj->assigned = true;
+          vobj->assigned_clusters.push_back(current_cluster);
+          assigned_total++;
+        }
+        
       }
+
+    }else{
+      
+      if (vobj->currentDFD <= range)
+      {
+
+        CurveElement* input_curve = vobj->original_curve;
+
+        if (cluster_mode == true && input_curve->assigned == true) continue;
+
+        range_list_frechet.push_back(input_curve);
+
+        if (cluster_mode == true)
+        { //Used in clustering Reverse assignment only
+          input_curve->assigned = true;
+          input_curve->assigned_clusters.push_back(current_cluster);
+          assigned_total++;
+        }
+
+      }
+    
+
     }
+
   }
 }
 

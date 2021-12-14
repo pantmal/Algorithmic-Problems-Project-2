@@ -253,6 +253,15 @@ void CurveElement::displayId()
 }
 
 //Displaying each column/value of the vector
+void CurveElement::displayVectorElementArray2D()
+{
+    // myLogFile << "---ELEMENT ARRAY---" << std::endl;
+    for(const auto &i : arrayElementTwoD)
+        myLogFile<<" (" << get<0>(i)<<","<<get<1>(i)<<"), ";
+
+}
+
+//Displaying each column/value of the vector
 void CurveElement::displayVectorElementArray()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;

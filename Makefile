@@ -11,8 +11,8 @@ search: SearchMain.o LSHash.o HyperCube.o TableF.o Neighbours.o IdDistancePair.o
 cluster: ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o config.o curve.o frechet.o interval.o point.o simplification.o
 	$(CC) -o cluster ClusterMain.o KMeans.o Cluster.o VectorElement.o LSHash.o HyperCube.o TableF.o Neighbours.o Helpers.o IdDistancePair.o CurveElement.o DiscreteFrechet.o TreeNode.o config.o curve.o frechet.o interval.o point.o simplification.o -O2
 
-utest: UnitTestMain.o TableF.o Helpers.o IdDistancePair.o
-	$(CC) -o utest UnitTestMain.o TableF.o Helpers.o IdDistancePair.o $(CU) -ldl
+utest: UnitTestMain.o TableF.o Helpers.o IdDistancePair.o config.o curve.o frechet.o interval.o point.o simplification.o
+	$(CC) -o utest UnitTestMain.o TableF.o Helpers.o IdDistancePair.o config.o curve.o frechet.o interval.o point.o simplification.o $(CU) -ldl
 
 UnitTestMain.o: UnitTestMain.cpp
 	$(CC) $(CFLAGS) $(CU) -ldl UnitTestMain.cpp
@@ -24,7 +24,7 @@ DiscreteFrechet.o: DiscreteFrechet.cpp
 	$(CC) $(CFLAGS) -O2 DiscreteFrechet.cpp
 
 LSHash.o: LSHash.cpp
-	$(CC) $(CFLAGS) -O2 LSHash.cpp
+	$(CC) $(CFLAGS) LSHash.cpp
 
 Neighbours.o: Neighbours.cpp
 	$(CC) $(CFLAGS) Neighbours.cpp
@@ -33,7 +33,7 @@ IdDistancePair.o: IdDistancePair.cpp
 	$(CC) $(CFLAGS) IdDistancePair.cpp
 
 Helpers.o: Helpers.cpp
-	$(CC) $(CFLAGS) Helpers.cpp
+	$(CC) $(CFLAGS) -O2 Helpers.cpp
 
 VectorElement.o: VectorElement.cpp
 	$(CC) $(CFLAGS) VectorElement.cpp

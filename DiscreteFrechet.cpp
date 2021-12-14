@@ -234,6 +234,49 @@ CurveElement* MeanCurve(CurveElement* P, CurveElement* Q){
     for (int row = 0; row < i; row++) delete[] table[row];
     delete[] table;
 
+
+    //vector< <tuple <unsigned int, double> > v = Mean_Curve->arrayElementTwoD;
+    double e = 0.0;
+
+    while (Mean_Curve->arrayElementTwoD.size() != i){
+
+        //e++;
+        e = e + 0.001;
+
+        auto it = Mean_Curve->arrayElementTwoD.begin();
+        while (it != Mean_Curve->arrayElementTwoD.end()){
+
+            if (it >= Mean_Curve->arrayElementTwoD.end() || it+1 >= Mean_Curve->arrayElementTwoD.end() || it+2 >= Mean_Curve->arrayElementTwoD.end()){
+                break;
+            }
+            
+            double a = get<1>(*it);
+            double b = get<1>(*(it+1));
+            double c = get<1>(*(it+2));
+
+            // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
+
+            double res1 = abs(a-b);
+            double res2 = abs(b-c);
+
+            //it = it+3;
+            if (res1 <= e && res2 <= e){
+                Mean_Curve->arrayElementTwoD.erase(it+1);
+                if (Mean_Curve->arrayElementTwoD.size()==i){
+                    break;
+                }
+            }else{
+                it = it+1;
+            }
+
+        }
+
+    }
+
+    //Mean_Curve->arrayElementTwoD = v;
+
+    //cout << Mean_Curve->arrayElementTwoD.size() << endl;
+
     return Mean_Curve;
 
 }

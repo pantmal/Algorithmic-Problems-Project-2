@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
     if (updater == "vector"){
         kmeans_obj.initialization(how_many_rows, Input_Array);
     }else{
-        kmeans_obj.initialization_frechet(how_many_rows, Input_Array_Frechet);
+        kmeans_obj.initialization(how_many_rows, Input_Array_Frechet);
     }
     
 
@@ -337,20 +337,25 @@ int main(int argc, char *argv[])
             kmeans_obj.KMeans_Hyper->insertItem(Input_Array[j]);
         }
     }
-    else if (kmeans_obj.assigner == "LSH")
+    else if (kmeans_obj.assigner == "LSH" || kmeans_obj.assigner == "LSH_Frechet")
     {
         kmeans_obj.KMeans_Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
         kmeans_obj.hashes = NUMBER_OF_HASH_TABLES;
 
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
         {
-            kmeans_obj.KMeans_Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w);
+            if (kmeans_obj.assigner == "LSH"){
+                kmeans_obj.KMeans_Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w);
+            }else{
+                kmeans_obj.KMeans_Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, 2*how_many_columns, k_input, w);
+            }
             kmeans_obj.KMeans_Hash_Array[i]->cluster_mode = true;
             kmeans_obj.KMeans_Hash_Array[i]->query_rows_field = 0;
         }
 
         unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
         default_random_engine e(seed);
+
         uniform_int_distribution<> Ur(0, INT_MAX);
         r_array = new int[k_input];
 
@@ -361,14 +366,51 @@ int main(int argc, char *argv[])
         }
 
         kmeans_obj.r_array = r_array;
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
-        {
-            for (int j = 0; j < how_many_rows; j++)
+
+        if (kmeans_obj.assigner == "LSH"){
+            for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
             {
-                kmeans_obj.KMeans_Hash_Array[i]->insertItem(Input_Array[j], r_array);
+                for (int j = 0; j < how_many_rows; j++)
+                {
+                    kmeans_obj.KMeans_Hash_Array[i]->insertItem(Input_Array[j], r_array);
+                }
             }
+        }else{
+            for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
+            {
+
+                uniform_int_distribution<> UM(100000, INT_MAX-1000000);
+                int M = UM(e);
+                cout << M << endl;
+
+                double open_d = delta - 1;
+                uniform_real_distribution<> U(0.0, open_d);
+                double t1 = U(e);
+                double t2 = U(e);
+                kmeans_obj.KMeans_Hash_Array[i]->t1 = t1;
+                kmeans_obj.KMeans_Hash_Array[i]->t2 = t2;
+
+                for (int j = 0; j < how_many_rows; j++)
+                {
+
+                    Input_Array_Frechet[j]->Snapping2d(t1,t2,delta,how_many_columns);
+                    string str_curve = Input_Array_Frechet[j]->Vectorization2d(how_many_columns,M);
+
+                    VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, NUMBER_OF_HASH_TABLES);
+                    vec2add->original_curve = Input_Array_Frechet[j];
+                    
+                    kmeans_obj.KMeans_Hash_Array[i]->insertItem(vec2add, r_array);
+                    
+                    //TODO: delete vec2add, ALSO refactor
+                    Input_Array_Frechet[j]->gridElementTwoD.clear();
+                    //myLogFile << "END OF ARR" << endl;
+                }
+            }
+
         }
-    }//TODO: more else
+
+        
+    }
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
@@ -378,50 +420,71 @@ int main(int argc, char *argv[])
     const auto before = clock::now();
 
     //Hardcoded value for clustering iterations.
-    //int iterations = 7;
-    //for (int i = 0; i < iterations; i++){ 
+    int iterations = 7;
+    for (int i = 0; i < iterations; i++){ 
         
         //Assignment step
         if (kmeans_obj.assigner == "Classic"){
             if (kmeans_obj.updater == "vector"){
                 kmeans_obj.ClassicAssignment(Input_Array, how_many_rows);
             }else{
-                kmeans_obj.ClassicAssignmentFrechet(Input_Array_Frechet, how_many_rows);
+                kmeans_obj.ClassicAssignment(Input_Array_Frechet, how_many_rows);
             }
             
         }
         else if (kmeans_obj.assigner == "Hypercube" || kmeans_obj.assigner == "LSH"){
             kmeans_obj.ReverseAssignment(Input_Array, how_many_rows);
-        }//TODO:ONE MORE ELSE
+        }else{
+            kmeans_obj.ReverseAssignment(Input_Array_Frechet,how_many_rows,how_many_columns,delta,M);
+        }
 
         //Update step
         if (kmeans_obj.updater == "vector"){
             kmeans_obj.update_vec(how_many_columns);
         }else{
+            for (int k1 = 0; k1 < clusters; k1++){
+                int list_size = kmeans_obj.ClusterArray[k1]->frechet_elements.size();
+                cout << "here size" << list_size  << endl;
+            }
             kmeans_obj.update_curve();
         }
         
-
-        //Clearing up some valus for the next pass.
-        // for (int j = 0; j < how_many_rows; j++){
-        //     Input_Array[j]->assigned = false;
-        //     Input_Array[j]->assigned_clusters.clear();
-        //     //TODO: ONE MORE ELSE
-        // }
-        // if (i != (iterations-1)){
+        //Clearing up some values for the next pass.
+        for (int j = 0; j < how_many_rows; j++){
             
-        //     for (int k1 = 0; k1 < clusters; k1++){
-        //         kmeans_obj.ClusterArray[k1]->cluster_elements.clear();
-        //     }
+            if (updater == "vector"){
+                Input_Array[j]->assigned = false;
+                Input_Array[j]->assigned_clusters.clear();
+            }else{
+                Input_Array_Frechet[j]->assigned = false;
+                Input_Array_Frechet[j]->assigned_clusters.clear();
+            }
+            
+        }
+        if (i != (iterations-1)){
+            
+            if (updater == "vector"){
+                for (int k1 = 0; k1 < clusters; k1++){
+                    kmeans_obj.ClusterArray[k1]->cluster_elements.clear();
+                }
 
-        //     if (kmeans_obj.assigner == "Hypercube"){ 
-        //         kmeans_obj.KMeans_Hyper->assigned_total = 0;
-        //     }
-        //     else if (kmeans_obj.assigner == "LSH"){
-        //         kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
-        //     }//TODO: ONE MORE ELSE
-        // }
-    //}
+                if (kmeans_obj.assigner == "Hypercube"){ 
+                    kmeans_obj.KMeans_Hyper->assigned_total = 0;
+                }
+                else if (kmeans_obj.assigner == "LSH"){
+                    kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
+                }
+            }else{
+                for (int k1 = 0; k1 < clusters; k1++){
+                    kmeans_obj.ClusterArray[k1]->frechet_elements.clear();
+                }
+                if (kmeans_obj.assigner == "LSH_Frechet"){
+                    kmeans_obj.KMeans_Hash_Array[0]->assigned_total = 0;
+                }
+            }
+            
+        }
+    }
 
     const sec duration = clock::now() - before; //Getting clustering time
 
@@ -445,15 +508,23 @@ int main(int argc, char *argv[])
         myLogFile << "Update: Mean Frechet " << endl;
     }
 
-    // for (int k1 = 0; k1 < clusters; k1++){
+    for (int k1 = 0; k1 < clusters; k1++){
 
-    //     myLogFile << "CLUSTER-" << (k1 + 1) << " {";
-    //     int size = kmeans_obj.ClusterArray[k1]->cluster_elements.size();
-    //     myLogFile << "size: " << size << ", centroid: [";
-    //     kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
-    //     TODO: Needs case
-    //     myLogFile << "]" << endl;
-    // }
+        myLogFile << "CLUSTER-" << (k1 + 1) << " {";
+        if (updater == "vector"){
+            int size = kmeans_obj.ClusterArray[k1]->cluster_elements.size();
+            myLogFile << "size: " << size << ", centroid: [";
+            kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
+            myLogFile << "]" << endl;   
+        }else{
+            int size = kmeans_obj.ClusterArray[k1]->frechet_elements.size();
+            myLogFile << "size: " << size << ", centroid: [";
+            kmeans_obj.ClusterArray[k1]->centroid_frechet->displayVectorElementArray2D();
+            myLogFile << "]" << endl;   
+        }
+
+        
+    }
     myLogFile << "clustering_time: " << duration.count() << "[s]" << endl;
 
     //Getting silhouette scores for every cluster and a total one.
@@ -486,17 +557,33 @@ int main(int argc, char *argv[])
     if (complete){
         for (int k1 = 0; k1 < clusters; k1++){
 
-            myLogFile << "CLUSTER-" << (k1 + 1) << " { centroid: [";
-            kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
-            myLogFile << "], items: ";
+            if(updater == "vector"){
+                myLogFile << "CLUSTER-" << (k1 + 1) << " { centroid: [";
+                kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
+                myLogFile << "], items: ";
 
-            list<VectorElement *>::iterator hitr1;
-            for (hitr1 = kmeans_obj.ClusterArray[k1]->cluster_elements.begin(); hitr1 != kmeans_obj.ClusterArray[k1]->cluster_elements.end(); ++hitr1){
+                list<VectorElement *>::iterator hitr1;
+                for (hitr1 = kmeans_obj.ClusterArray[k1]->cluster_elements.begin(); hitr1 != kmeans_obj.ClusterArray[k1]->cluster_elements.end(); ++hitr1){
 
-                VectorElement *vobg = *hitr1;
-                myLogFile << vobg->id << ", ";
+                    VectorElement *vobg = *hitr1;
+                    myLogFile << vobg->id << ", ";
+                }
+                myLogFile << "}" << endl;
+            }else{
+                myLogFile << "CLUSTER-" << (k1 + 1) << " { centroid: [";
+                kmeans_obj.ClusterArray[k1]->centroid_frechet->displayVectorElementArray2D();
+                myLogFile << "], items: ";
+
+                list<CurveElement *>::iterator hitr1;
+                for (hitr1 = kmeans_obj.ClusterArray[k1]->frechet_elements.begin(); hitr1 != kmeans_obj.ClusterArray[k1]->frechet_elements.end(); ++hitr1){
+
+                    CurveElement *vobg = *hitr1;
+                    myLogFile << vobg->id << ", ";
+                }
+                myLogFile << "}" << endl;
             }
-            myLogFile << "}" << endl;
+
+            
         }
     }
 

@@ -659,7 +659,7 @@ int main(int argc, char *argv[])
  
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
-        uniform_int_distribution<> UM(0, INT_MAX-1000000);
+        uniform_int_distribution<> UM(100000, INT_MAX-1000000);
         int M = UM(e);
         cout << M << endl;
        
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
             unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
             default_random_engine e(seed);
             
-            double open_d = delta - 1;          
+            double open_d = delta - 1;
             uniform_real_distribution<> U(0.0, open_d);
             double t1 = U(e);
             double t2 = U(e);
@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
         LSHash Hash_Obj(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
         Hash_Obj.initNeighboursInfo(query_rows, NUMBER_OF_NEIGHBOURS);
 
-        uniform_int_distribution<> UM(0, INT_MAX-1000000);
+        uniform_int_distribution<> UM(100000, INT_MAX-1000000);
         int M = UM(e);
         cout << M << endl;
 

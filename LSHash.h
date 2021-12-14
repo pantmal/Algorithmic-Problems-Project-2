@@ -35,6 +35,7 @@ public:
     int current_cluster;
     int assigned_total;
     list<VectorElement * > range_list;
+    list<CurveElement * > range_list_frechet;
 
     double t1;
     double t2;
@@ -45,7 +46,7 @@ public:
  
     void calculateDistanceAndFindN(VectorElement *, int *r_array, int j, int N, string algorithm);
     void displayNeighbours(int);
-    void RangeSearch(VectorElement*, int*, int, double);
+    void RangeSearch(VectorElement*, int*, int, double, string);
 
 public:
     LSHash(int V, int v_size, int, int);
@@ -74,7 +75,5 @@ public:
 
     ~LSHash();
 };
-
-double ret_CFD(CurveElement*,CurveElement*);
 
 #endif /* LSHASH_H */

@@ -35,10 +35,11 @@ class KMeans{
 
         KMeans(string, string, int);
         void initialization(int, VectorElement**);
-        void initialization_frechet(int, CurveElement**);
+        void initialization(int, CurveElement**);
         void ClassicAssignment(VectorElement**, int);
-        void ClassicAssignmentFrechet(CurveElement**, int);
-        void ReverseAssignment(VectorElement**, int );//TODO:ONE MORE
+        void ClassicAssignment(CurveElement**, int);
+        void ReverseAssignment(VectorElement**, int );
+        void ReverseAssignment(CurveElement**, int , int, double, int);
         void update_vec(int);
         void update_curve();
         double silhouette(int);

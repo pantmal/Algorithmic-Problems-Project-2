@@ -9,6 +9,16 @@
 #include <bits/stdc++.h>
 
 #include "Helpers.h"
+#include "CurveElement.h"
+
+#include "config.hpp"
+#include "curve.hpp"
+#include "frechet.hpp"
+#include "interval.hpp"
+#include "point.hpp"
+#include "simplification.hpp"
+#include "types.hpp"
+
 
 using namespace std;
 
@@ -144,5 +154,41 @@ double args_string_to_double(std::string &x)
     return num;
 }
 
+double ret_CFD(CurveElement* input, CurveElement* query){
+
+  
+  Points v1_points(1);
+  
+  for (int i = 0; i < input->filteredElementOneD.size(); i++){
+      Point p(1); //= new Point(1);
+      p.set(0,input->filteredElementOneD[i]);
+      v1_points.add(p);
+  }
+
+  //vector<double> v2 = input->filteredElementOneD;
+
+  Points v2_points(1);
+
+  for (int i = 0; i < query->filteredElementOneD.size(); i++){
+      Point p(1);// = new Point(1);
+      p.set(0,query->filteredElementOneD[i]);
+      v2_points.add(p);
+  }
+
+  Curve* c1 = new Curve(v1_points,"input");
+  Curve* c2 = new Curve(v2_points,"query");
+
+  Frechet::Continuous::Distance cont_dist = Frechet::Continuous::distance(*c1, *c2);
+
+  delete c1;
+  delete c2;
+
+  double dist = cont_dist.value;
+
+  //cout<< "dist is " << dist << endl;
+
+  return dist;
+
+}
 
 std::ofstream myLogFile;

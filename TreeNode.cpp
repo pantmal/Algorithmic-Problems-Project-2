@@ -112,10 +112,10 @@ CurveElement* TreeNode::MeanCurveTraversal(TreeNode* current){
     }
 
     CurveElement* mean_curve = MeanCurve(left_mean, right_mean);
-    if (mean_curve != NULL){
-        mean_curve->displayVectorElementGrid();
-        myLogFile << "size " << mean_curve->arrayElementTwoD.size() << std::endl;
-    }
+    // if (mean_curve != NULL){
+    //     mean_curve->displayVectorElementGrid();
+    //     myLogFile << "size " << mean_curve->arrayElementTwoD.size() << std::endl;
+    // }
     
     // now deal with the node
     //cout << root->curve << " " << root->data << " end ";

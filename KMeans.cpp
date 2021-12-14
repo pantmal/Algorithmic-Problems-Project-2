@@ -142,7 +142,7 @@ void KMeans::initialization(int input_size, VectorElement** Input_Array){
 
 }
 
-void KMeans::initialization_frechet(int input_size, CurveElement** Input_Array_Frechet){
+void KMeans::initialization(int input_size, CurveElement** Input_Array_Frechet){
 
     int t_counter = 0;
     unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
@@ -283,7 +283,7 @@ void KMeans::ClassicAssignment(VectorElement** Input_Array, int how_many_rows){
 }
 
 
-void KMeans::ClassicAssignmentFrechet(CurveElement** Input_Array_Frechet, int how_many_rows){
+void KMeans::ClassicAssignment(CurveElement** Input_Array_Frechet, int how_many_rows){
 
     for (int i = 0; i < how_many_rows; i++){
         
@@ -355,7 +355,7 @@ void KMeans::ReverseAssignment(VectorElement** Input_Array, int how_many_rows){
                     }
 
                     this->KMeans_Hash_Array[j]->current_cluster = ClusterArray[k]->id;
-                    this->KMeans_Hash_Array[j]->RangeSearch(ClusterArray[k]->centroid, this->r_array, 0, min_dist * power);            
+                    this->KMeans_Hash_Array[j]->RangeSearch(ClusterArray[k]->centroid, this->r_array, 0, min_dist * power, "LSH");            
                 }
                 ClusterArray[k]->cluster_elements = this->KMeans_Hash_Array[hashes-1]->range_list;
             }
@@ -439,6 +439,143 @@ void KMeans::ReverseAssignment(VectorElement** Input_Array, int how_many_rows){
     
 }
 
+void KMeans::ReverseAssignment(CurveElement** Input_Array, int how_many_rows, int how_many_columns, double delta, int M){
+
+
+    //Find min dist among centroids
+    double min_dist = DBL_MAX;
+    for (int k = 0; k < clusters; k++){
+        
+        for (int k2 = 0; k2 < clusters; k2++){
+            if (ClusterArray[k2]->id == ClusterArray[k]->id) continue;
+
+            CurveElement* vobj = ClusterArray[k]->centroid_frechet;
+
+
+            double d = vobj->arrayElementTwoD.size();
+            double dfd = ret_DFD(d,d,vobj->arrayElementTwoD,ClusterArray[k2]->centroid_frechet->arrayElementTwoD);
+
+            if (dfd < min_dist){
+                min_dist = dfd;
+            } 
+        }
+    }
+
+    
+    int assigned_total = 0;
+    int non_assignemnts = 0;
+    double power = 1;
+    while (assigned_total != how_many_rows){ //Stop if all element are assigned
+        
+        for (int k = 0; k < clusters; k++){
+
+            int size_before = ClusterArray[k]->frechet_elements.size();
+
+            for (int j = 0; j < hashes; j++)
+            {
+                if (j!=0){
+                    this->KMeans_Hash_Array[j]->range_list_frechet = this->KMeans_Hash_Array[j-1]->range_list_frechet;        
+                    this->KMeans_Hash_Array[j]->assigned_total = this->KMeans_Hash_Array[j-1]->assigned_total;      
+                }else{
+                    this->KMeans_Hash_Array[j]->range_list_frechet = ClusterArray[k]->frechet_elements;
+                }
+
+                this->KMeans_Hash_Array[j]->current_cluster = ClusterArray[k]->id;
+
+                //mutaute
+                double t1 = this->KMeans_Hash_Array[j]->t1;
+                double t2 = this->KMeans_Hash_Array[j]->t2;
+                ClusterArray[k]->centroid_frechet->Snapping2d(t1,t2,delta,how_many_columns);
+                string str_curve = ClusterArray[k]->centroid_frechet->Vectorization2d(how_many_columns,M);
+                
+                VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, hashes);
+                vec2add->original_curve = ClusterArray[k]->centroid_frechet;
+
+                this->KMeans_Hash_Array[j]->RangeSearch(vec2add, this->r_array, 0, min_dist * power, "LSH_Frechet");
+            }
+            ClusterArray[k]->frechet_elements = this->KMeans_Hash_Array[hashes-1]->range_list_frechet;
+            
+
+            //If size of cluster is the same after assignment methods, increment a counter. Will stop if two many clusters went unassigned.
+            int size_after = ClusterArray[k]->frechet_elements.size();
+            if (size_before == size_after){
+                non_assignemnts++;
+            }
+
+        }
+
+        //Check if there were double (or more) assignments for each item        
+        for (int j = 0; j < how_many_rows; j++){
+
+            if (Input_Array[j]->assigned_clusters.size() > 1){
+
+                //Find the closest cluster of the assigned ones.
+                double min_dist = DBL_MAX;
+                int min_id = -1;
+                for (list<int>::iterator i=Input_Array[j]->assigned_clusters.begin(); i!=Input_Array[j]->assigned_clusters.end(); i++){
+                    int cluster_index = *i;
+
+                    CurveElement *vobj = Input_Array[j];
+                    
+                    double d = vobj->arrayElementTwoD.size();
+                    double dfd = ret_DFD(d,d,vobj->arrayElementTwoD,ClusterArray[cluster_index]->centroid_frechet->arrayElementTwoD);
+                    
+                    if (dfd < min_dist){
+                        min_dist = dfd;
+                        min_id = ClusterArray[cluster_index]->id;
+                    } 
+            
+                }   
+
+                //And remove it from the other clusters.
+                for (list<int>::iterator i=Input_Array[j]->assigned_clusters.begin(); i!=Input_Array[j]->assigned_clusters.end(); i++){
+                    
+                    int cluster_index = *i;
+                    if (cluster_index == min_id) continue;
+                    
+                    ClusterArray[cluster_index]->frechet_elements.remove(Input_Array[j]);
+                }
+            }
+            
+        }
+
+        
+        assigned_total = this->KMeans_Hash_Array[hashes-1]->assigned_total;
+        
+        power *= 2; //Mult the power
+
+        if (non_assignemnts > (clusters/2)){ //Stop the assignment step if more than half of the clusters didn't get any new items.
+            break;
+        }
+
+    }
+
+    //Do the Classic assignment for the unassigned elems.
+    int count = 0;
+    if (assigned_total != how_many_rows){
+        for (int i = 0; i < how_many_rows; i++){
+            if (Input_Array[i]->assigned == false){
+                
+                double min_dist = DBL_MAX;
+                int min_id = -1;
+                for (int k = 0; k < clusters; k++){
+
+                    CurveElement *vobj = Input_Array[i];
+                    double d = vobj->arrayElementTwoD.size();
+                    double dfd = ret_DFD(d,d,vobj->arrayElementTwoD,ClusterArray[k]->centroid_frechet->arrayElementTwoD);
+
+                    if (dfd < min_dist){
+                        min_dist = dfd;
+                        min_id = ClusterArray[k]->id;
+                    } 
+                }
+                ClusterArray[min_id]->frechet_elements.push_back(Input_Array[i]);
+            }
+        }
+    }
+    
+}
+
 //Update step by getting the mean of the centroid.
 void KMeans::update_vec(int columns){
     
@@ -483,8 +620,12 @@ void KMeans::update_curve(){
 
 
     for (int k = 0; k < clusters; k++){
-
+       
         int list_size = ClusterArray[k]->frechet_elements.size();
+        if (list_size == 0){
+            continue;
+        }
+
         double log_res = log2(list_size);
         int height = ceil(log_res);
 
@@ -496,7 +637,7 @@ void KMeans::update_curve(){
             tree_size = tree_size - removed_nodes;
         }
 
-        cout << "here " << list_size <<" " << height << " " << tree_size << endl;
+        //cout << "here " << list_size <<" " << height << " " << tree_size << endl;
         TreeNode* MeanCurveTree = MeanCurveTree->AddNode(MeanCurveTree,0,tree_size);
         
         list<CurveElement *> cluster_copy = ClusterArray[k]->frechet_elements;
@@ -518,9 +659,12 @@ void KMeans::update_curve(){
         //cout << "here f" << endl;
 
         CurveElement* final_mean = MeanCurveTree->MeanCurveTraversal(MeanCurveTree);
-        final_mean->displayVectorElementGrid();
-        myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
-        cout << "here f" << endl;
+        //final_mean->displayVectorElementGrid();
+        //myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
+        //cout << "here f" << endl;
+
+        //ClusterArray[k]->frechet_elements.clear();
+        ClusterArray[k]->centroid_frechet = final_mean;//del the old?
     }
 
 }
@@ -608,7 +752,7 @@ double KMeans::silhouette_frechet(int rows){
     
     
     if (clusters == 1){ //Edge case for only one cluster
-        double silhouette_total = 0;
+        double silhouette_total = -2;
         return silhouette_total;
     }
 
@@ -655,6 +799,7 @@ double KMeans::silhouette_frechet(int rows){
             //And get the b(i)
             double b_dists = 0.0;
             list_size_B = ClusterArray[min_id]->frechet_elements.size();
+            //cout << "listB " << list_size_B << endl;
             for (list<CurveElement *>::iterator hitr3 = ClusterArray[min_id]->frechet_elements.begin(); hitr3 != ClusterArray[min_id]->frechet_elements.end(); ++hitr3){
                 CurveElement *vobg3 = *hitr3;
                 

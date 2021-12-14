@@ -41,7 +41,6 @@ void VectorElement::displayId()
 void VectorElement::displayVectorElementArray()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;
-    int ii = 0;
     for (int i = 0; i < size; i++)
     {
         myLogFile << arrayVectorElement[i] << ", ";
