@@ -203,6 +203,9 @@ int main(int argc, char *argv[])
     CurveElement **Input_Array_Frechet;
     CurveElement **Query_Array_Frechet;
 
+    VectorElement **vectorized_input_storage;
+    VectorElement **vectorized_query_storage;
+
     int query_rows = -1;
     //Open dataset file to count number of rows.
     ifstream myfile;
@@ -389,7 +392,6 @@ int main(int argc, char *argv[])
 
     }
 
-
     //R array is here. Sets r values using uniform dist up to max int
     unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
     default_random_engine e(seed);
@@ -403,13 +405,14 @@ int main(int argc, char *argv[])
         r_array[i] = r_val;
     }
 
+    LSHash **Hash_Array;
 
     if (algorithm == "LSH"){
         
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
         //Creatign array of Hash tables.
-        LSHash **Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
+        Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
         {
             Hash_Array[i] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
@@ -512,33 +515,6 @@ int main(int argc, char *argv[])
         myLogFile << "MAF = " << last_maf << endl;
 
 
-        //---DELETE MEMORY---
-
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
-        {
-            delete Hash_Array[i];
-        }
-        delete[] Hash_Array;
-
-        delete[] r_array;
-
-        for (int i = 0; i < how_many_rows; i++)
-        {
-            delete Input_Array[i];
-        }
-        delete[] Input_Array;
-
-        for (int i = 0; i < query_rows; i++)
-        {
-            delete Query_Array[i];
-        }
-
-        delete[] Query_Array;
-
-        myLogFile.close();
-
-        cout << "Program has successfully completed and written its results to the output file." << endl;
-
     }else if (algorithm == "Hypercube"){
     
         //Initialize cube object and insert items
@@ -635,25 +611,6 @@ int main(int argc, char *argv[])
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
         myLogFile << "MAF = " << last_maf << endl;
 
-        //---DELETE MEMORY---
-
-        for (int i = 0; i < how_many_rows; i++)
-        {
-            delete Input_Array[i];
-        }
-        delete[] Input_Array;
-
-        //cout << "del" << endl;
-        for (int i = 0; i < query_rows; i++)
-        {
-            delete Query_Array[i];
-        }
-
-        delete[] Query_Array;
-
-        myLogFile.close();
-
-        cout << "Program has successfully completed and written its results to the output file." << endl;
     
     }else if (algorithm == "Frechet" && metric == "discrete"){
  
@@ -662,8 +619,10 @@ int main(int argc, char *argv[])
         uniform_int_distribution<> UM(100000, INT_MAX-1000000);
         int M = UM(e);
         cout << M << endl;
+
+        vectorized_input_storage = new VectorElement * [how_many_rows];
        
-        LSHash **Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
+        Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
         for (int l = 0; l < NUMBER_OF_HASH_TABLES; l++){
 
             Hash_Array[l] = new LSHash(NUMBER_OF_BUCKETS, how_many_columns*2, k_input, w_arg);
@@ -689,7 +648,8 @@ int main(int argc, char *argv[])
                 
                 Hash_Array[l]->insertItem(vec2add, r_array);
                 
-                //TODO: delete vec2add, ALSO refactor
+                //TODO: ALSO refactor
+                vectorized_input_storage[i] = vec2add;
                 Input_Array_Frechet[i]->gridElementTwoD.clear();    
                 //myLogFile << "END OF ARR" << endl;
             }
@@ -699,11 +659,12 @@ int main(int argc, char *argv[])
         }
 
         //query stuff
+        vectorized_query_storage = new VectorElement *[query_rows];
+
         double tTrueSum = 0.0;
         double tApproxSum = 0.0;
         double last_maf = -1.0;
         list<idDistancePair> PairList;
-        //idDistancePair **PairList = new idDistancePair *[NUMBER_OF_HASH_TABLES];
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
@@ -745,6 +706,8 @@ int main(int argc, char *argv[])
                 vec2add->original_curve = Query_Array_Frechet[i];
 
                 Hash_Array[j]->calculateDistanceAndFindN(vec2add, r_array, i, NUMBER_OF_NEIGHBOURS, "Frechet");
+
+                vectorized_query_storage[i] = vec2add;
                 
                 for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
                 { //Add a idDistancePair object for every neighbor.
@@ -805,32 +768,6 @@ int main(int argc, char *argv[])
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
         myLogFile << "MAF = " << last_maf << endl;//TODO
 
-        //del stuff
-        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
-        {
-            delete Hash_Array[i];
-        }
-        delete[] Hash_Array;
-
-        delete[] r_array;
-
-        for (int i = 0; i < how_many_rows; i++)
-        {
-            delete Input_Array_Frechet[i];
-        }
-        delete[] Input_Array_Frechet;
-
-        for (int i = 0; i < query_rows; i++)
-        {
-            delete Query_Array_Frechet[i];
-        }
-
-        delete[] Query_Array_Frechet;
-
-        myLogFile.close();
-
-        cout << "Program has successfully completed and written its results to the output file." << endl;
-
     
     }else{
 
@@ -846,6 +783,8 @@ int main(int argc, char *argv[])
         uniform_real_distribution<> U(0.0, open_d);
         double t1 = U(e);
         //Hash_Obj.t1 = t1;
+
+        vectorized_input_storage = new VectorElement * [how_many_rows];
         
         for (int i = 0; i < how_many_rows; i++)
         {
@@ -862,8 +801,11 @@ int main(int argc, char *argv[])
             
             Hash_Obj.insertItem(vec2add, r_array); //do some checks
 
+            vectorized_input_storage[i] = vec2add;
             //myLogFile << "END OF ARR" << endl;
         }
+
+        vectorized_query_storage = new VectorElement * [query_rows];
 
         double tTrueSum = 0.0;
         double tApproxSum = 0.0;
@@ -911,6 +853,8 @@ int main(int argc, char *argv[])
             vec2add->original_curve = Query_Array_Frechet[i];
     
             Hash_Obj.calculateDistanceAndFindN(vec2add, r_array, i, NUMBER_OF_NEIGHBOURS, "Frechet_Cont");
+
+            vectorized_query_storage[i] = vec2add;
                 
             for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
             { //Add a idDistancePair object for every neighbor.
@@ -960,28 +904,59 @@ int main(int argc, char *argv[])
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
         myLogFile << "MAF = " << last_maf << endl;
 
-        //---DELETE MEMORY---
+    }
+
+    //---DELETE MEMORY---
+
+    delete[] r_array;
+
+    if (algorithm == "LSH" || (algorithm == "Frechet" && metric == "discrete") ){
+        
+        for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
+        {
+            delete Hash_Array[i];
+        }
+        delete[] Hash_Array;
+    }
+
+    if (algorithm == "LSH" || algorithm == "Hypercube"){
+
+        for (int i = 0; i < how_many_rows; i++)
+        {
+            delete Input_Array[i];
+        }
+        delete[] Input_Array;
+
+        for (int i = 0; i < query_rows; i++)
+        {
+            delete Query_Array[i];
+        }
+
+        delete[] Query_Array;
+
+    }else if (algorithm == "Frechet"){
 
         for (int i = 0; i < how_many_rows; i++)
         {
             delete Input_Array_Frechet[i];
+            delete vectorized_input_storage[i];
         }
         delete[] Input_Array_Frechet;
+        delete[] vectorized_input_storage;
 
         for (int i = 0; i < query_rows; i++)
         {
             delete Query_Array_Frechet[i];
+            delete vectorized_query_storage[i];
         }
 
         delete[] Query_Array_Frechet;
-
-        myLogFile.close();
-
-        cout << "Program has successfully completed and written its results to the output file." << endl;
-
-
+        delete[] vectorized_query_storage;
 
     }
+
+    myLogFile.close();
+    cout << "Program has successfully completed and written its results to the output file." << endl;
 
     
     return 0;

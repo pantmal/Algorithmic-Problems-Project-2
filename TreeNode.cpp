@@ -126,3 +126,20 @@ CurveElement* TreeNode::MeanCurveTraversal(TreeNode* current){
 
 
 }
+
+
+void TreeNode::DeleteNode(TreeNode* current)
+{
+    if (current == NULL) return;
+ 
+    /* first delete both subtrees */
+    DeleteNode(current->left);
+    DeleteNode(current->right);
+     
+    /* then delete the node */
+    //cout << "\n Deleting node: " << node->data;
+
+    if(Curve_Object != NULL) delete Curve_Object;
+
+    delete current;
+}

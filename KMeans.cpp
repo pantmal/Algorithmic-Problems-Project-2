@@ -482,7 +482,6 @@ void KMeans::ReverseAssignment(CurveElement** Input_Array, int how_many_rows, in
 
                 this->KMeans_Hash_Array[j]->current_cluster = ClusterArray[k]->id;
 
-                //mutaute
                 double t1 = this->KMeans_Hash_Array[j]->t1;
                 double t2 = this->KMeans_Hash_Array[j]->t2;
                 ClusterArray[k]->centroid_frechet->Snapping2d(t1,t2,delta,how_many_columns);
@@ -492,6 +491,7 @@ void KMeans::ReverseAssignment(CurveElement** Input_Array, int how_many_rows, in
                 vec2add->original_curve = ClusterArray[k]->centroid_frechet;
 
                 this->KMeans_Hash_Array[j]->RangeSearch(vec2add, this->r_array, 0, min_dist * power, "LSH_Frechet");
+                delete vec2add;                
             }
             ClusterArray[k]->frechet_elements = this->KMeans_Hash_Array[hashes-1]->range_list_frechet;
             
@@ -676,6 +676,8 @@ void KMeans::update_curve(){
 
         //ClusterArray[k]->frechet_elements.clear();
         ClusterArray[k]->centroid_frechet = final_mean;//del the old?
+
+        MeanCurveTree->DeleteNode(MeanCurveTree);
     }
 
 }

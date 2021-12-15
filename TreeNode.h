@@ -25,8 +25,7 @@ public:
     TreeNode* AddNode(TreeNode*, int, int);
     bool AddCurve(TreeNode* , CurveElement* );
     CurveElement* MeanCurveTraversal(TreeNode*);
-
-    //DestroyTree
+    void DeleteNode(TreeNode*);
 };
 
 

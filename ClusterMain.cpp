@@ -327,6 +327,8 @@ int main(int argc, char *argv[])
 
     //Setting up the HyperCube and LSHash objects if need be.
     int *r_array;
+
+    VectorElement **vectorized_input_storage;
     if (kmeans_obj.assigner == "Hypercube")
     {
         kmeans_obj.KMeans_Hyper = new HyperCube(kdim, how_many_columns, w, N, M, probes, 0.0);
@@ -376,6 +378,8 @@ int main(int argc, char *argv[])
                 }
             }
         }else{
+
+            vectorized_input_storage = new VectorElement *[how_many_rows];
             for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
             {
 
@@ -401,7 +405,7 @@ int main(int argc, char *argv[])
                     
                     kmeans_obj.KMeans_Hash_Array[i]->insertItem(vec2add, r_array);
                     
-                    //TODO: delete vec2add, ALSO refactor
+                    vectorized_input_storage[j] = vec2add;
                     Input_Array_Frechet[j]->gridElementTwoD.clear();
                     //myLogFile << "END OF ARR" << endl;
                 }
@@ -602,13 +606,12 @@ int main(int argc, char *argv[])
         }
         delete[] Input_Array_Frechet;
     }
-    
 
     if (kmeans_obj.assigner == "Hypercube")
     {
         delete kmeans_obj.KMeans_Hyper;
     }
-    else if (kmeans_obj.assigner == "LSH")
+    else if (kmeans_obj.assigner == "LSH" || kmeans_obj.assigner == "LSH_Frechet")
     {
         delete[] r_array;
         for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
@@ -616,8 +619,18 @@ int main(int argc, char *argv[])
             delete kmeans_obj.KMeans_Hash_Array[i];
         }
         delete[] kmeans_obj.KMeans_Hash_Array;
-    }
 
+        if (kmeans_obj.assigner == "LSH_Frechet"){
+            for (int i = 0; i < how_many_rows; i++)
+            {
+                delete vectorized_input_storage[i];
+            }
+            delete[] vectorized_input_storage;
+        }
+        
+    }
+    
+    
     myLogFile.close();
 
     cout << "Program has successfully completed and written its results to the output file." << endl;

@@ -147,6 +147,8 @@ int HyperCube::indexBuilder(VectorElement *key)
 
   int index = stoi(index_s, nullptr, 2);
 
+  delete[] h_array;
+
   return index;
 }
 
