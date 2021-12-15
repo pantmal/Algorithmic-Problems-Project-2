@@ -20,7 +20,7 @@
 using namespace CppUnit;
 using namespace std;
 
-//-----------------------------------------------------------------------------
+//TODO: Add binarySearch
 
 class Suite : public CppUnit::TestFixture
 {

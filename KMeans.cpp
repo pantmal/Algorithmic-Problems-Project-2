@@ -582,6 +582,12 @@ void KMeans::update_vec(int columns){
     //Add up the column vals
     for (int k = 0; k < clusters; k++){
 
+        int list_size = ClusterArray[k]->cluster_elements.size();
+        
+        if (list_size == 0){
+            continue;
+        }
+
         for (int j = 0; j < columns; j++){
 
             double curr_sum = 0.0;
@@ -601,6 +607,11 @@ void KMeans::update_vec(int columns){
     for (int k = 0; k < clusters; k++){
         
         int list_size = ClusterArray[k]->cluster_elements.size();
+
+        if (list_size == 0){
+            continue;
+        }
+        
         for (int j = 0; j < columns; j++){
 
             double mean = ClusterArray[k]->centroid->arrayVectorElement[j] / list_size;

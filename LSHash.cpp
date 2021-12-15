@@ -212,7 +212,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
 //Similar searching for Range
 void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, string algorithm) //j=no of query
 {
-  //TODO: ADD LSH FRECH
+  
   int index = AmplifiedHashFunction(q, r_array);
 
   if (table[index].size() == 0)
@@ -271,7 +271,7 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
           vobj->assigned_clusters.push_back(current_cluster);
           assigned_total++;
         }
-        
+
       }
 
     }else{

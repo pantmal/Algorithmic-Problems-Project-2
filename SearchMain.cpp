@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     // cout << "NUMBER OF NEIGHBOURS: " << NUMBER_OF_NEIGHBOURS << endl;
     // cout << "RANGE: " << RANGE << endl;
 
-    int w_arg = 100; //Hardcoded value for w
+    int w_arg = 700; //Hardcoded value for w
     bool justOnce = true;
     int how_many_columns = 0;
     int how_many_rows = 0;
