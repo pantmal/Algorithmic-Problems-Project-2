@@ -166,8 +166,8 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
         vobj->currentDFD = dfd;
       }else{
         
-        // //double cfd = 0.0;
-        double cfd = ret_CFD(input_curve,query_curve);
+        //double cfd = 0.0;
+        double cfd = ret_CFD(input_curve,query_curve,true);
         vobj->currentCFD = cfd;
       }
       

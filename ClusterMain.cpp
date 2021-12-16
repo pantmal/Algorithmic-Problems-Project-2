@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
     int NUMBER_OF_HASH_TABLES = -1; //number_of_vector_hash_tables
     double delta = -1.0;
     bool complete = false;
-    bool silhouette_param = false; //TODO: FIX BOOLS
+    bool silhouette_param = false;
     string assigner = "Classic"; //method. Will use Classic for assignment if none provided.
-    string updater = "vector"; //TODO: Needs cases
+    string updater = "vector";
 
     for (int i = 1; i < argc; i++){
 
@@ -55,14 +55,7 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(argv[i], "-complete") == 0)
         {
-            if (strcmp(argv[i + 1], "true") == 0)
-            {
-                complete = true;
-            }
-            else if (strcmp(argv[i + 1], "false") == 0)
-            {
-                complete = false;
-            }
+            complete = true;
         }
         else if (strcmp(argv[i], "-delta") == 0)
         {
@@ -72,29 +65,27 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(argv[i], "-silhouette") == 0)
         {
-            if (strcmp(argv[i + 1], "true") == 0)
-            {
-                silhouette_param = true;
-            }
-            else if (strcmp(argv[i + 1], "false") == 0)
-            {
-                silhouette_param = false;
-            }
+            silhouette_param = true;
         }
         else if (strcmp(argv[i], "-update") == 0)
         {
-            if (strcmp(argv[i + 1], "Mean_Frechet") == 0) //TODO: Change this shit
+
+            if (strcmp(argv[i + 1], "Mean") != 0){
+                cout << "Method must be Mean Frechet or Mean Vector - wrong input" << endl;
+                exit(0);
+            }
+
+            if (strcmp(argv[i + 2], "Frechet") == 0)
             {
                 updater = "frechet";
             }
-            
-            else if (strcmp(argv[i + 1], "Mean_Vector") == 0)
+            else if (strcmp(argv[i + 2], "Vector") == 0)
             {
                 updater = "vector";
             }
             else
-            {//TODO:_?
-                cout << "Method must be Mean_Frechet or Mean_Vector - wrong input" << endl;
+            {
+                cout << "Method must be Mean Frechet or Mean Vector - wrong input" << endl;
                 exit(0);
             }
         }
@@ -122,6 +113,16 @@ int main(int argc, char *argv[])
                 exit(0);
             }
         }
+    }
+
+    if (updater == "vector" && assigner == "LSH_Frechet"){
+        cout << "Mean Vector update step is incompatible with LSH_Frechet assignment step. Choose a new combination." << endl;
+        exit(0);
+    }
+
+    if (updater == "frechet" && (assigner == "LSH" || assigner == "Hypercube")){
+        cout << "Mean Frechet update step is incompatible with LSH or Hypercube assignment steps. Choose a new combination." << endl;
+        exit(0);
     }
 
     //If no file is provided the program will provide command prompts for the user to enter.
@@ -203,26 +204,18 @@ int main(int argc, char *argv[])
         cout<<"You need to specify clusters value. Programme will exit"<<endl;
         exit(0);
     }
-    if (NUMBER_OF_HASH_TABLES == -1)
-        NUMBER_OF_HASH_TABLES = 3; //PARAM <L>
-    if (k_input == -1)
-        k_input = 4; //PARAM <N>
-    if (M == -1)
-        M =10 ; //PARAM <radius>
-    if (kdim == -1)
-        kdim = 3; //PARAM 
-    if (probes == -1)
-        probes = 2; //PARAM 
-    if (delta == -1.0)
-        delta = 5; //PARAM <N>
-
-    // cout << "number_of_clusters: " << clusters << endl;
-    // cout << "number_of_vector_hash_tables: " << NUMBER_OF_HASH_TABLES << endl;
-    // cout << "number_of_vector_hash_functions: " << k_input << endl;
-    // cout << "max_number_M_hypercube: " << M << endl;
-    // cout << "number_of_hypercube_dimensions: " << kdim << endl;
-    // cout << "number_of_probes: " << probes << endl;
-
+    
+    if (NUMBER_OF_HASH_TABLES == -1) NUMBER_OF_HASH_TABLES = 3; //PARAM <L>
+    
+    if (k_input == -1) k_input = 4; //PARAM <N>
+    
+    if (M == -1) M = 10 ; //PARAM <radius>
+    
+    if (kdim == -1) kdim = 3; //PARAM 
+    
+    if (probes == -1) probes = 2; //PARAM 
+    
+    if (delta == -1.0) delta = 1; //PARAM <N>
     
     bool justOnce = true;
     int how_many_columns = 0;
@@ -379,7 +372,9 @@ int main(int argc, char *argv[])
             }
         }else{
 
-            vectorized_input_storage = new VectorElement *[how_many_rows];
+            vectorized_input_storage = new VectorElement *[how_many_rows*NUMBER_OF_HASH_TABLES];
+            int vec_counter = 0;
+
             for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
             {
 
@@ -405,7 +400,9 @@ int main(int argc, char *argv[])
                     
                     kmeans_obj.KMeans_Hash_Array[i]->insertItem(vec2add, r_array);
                     
-                    vectorized_input_storage[j] = vec2add;
+                    vectorized_input_storage[vec_counter] = vec2add;
+                    vec_counter++;
+
                     Input_Array_Frechet[j]->gridElementTwoD.clear();
                     //myLogFile << "END OF ARR" << endl;
                 }
@@ -508,7 +505,7 @@ int main(int argc, char *argv[])
     if (updater == "vector"){
         myLogFile << "Update: Mean Vector " << endl;
     }
-    else if (assigner == "frechet"){
+    else{
         myLogFile << "Update: Mean Frechet " << endl;
     }
 
@@ -621,7 +618,7 @@ int main(int argc, char *argv[])
         delete[] kmeans_obj.KMeans_Hash_Array;
 
         if (kmeans_obj.assigner == "LSH_Frechet"){
-            for (int i = 0; i < how_many_rows; i++)
+            for (int i = 0; i < how_many_rows*NUMBER_OF_HASH_TABLES; i++)
             {
                 delete vectorized_input_storage[i];
             }

@@ -37,11 +37,12 @@ int main(int argc, char *argv[])
     int M = -1;
     int probes = -1;
     int NUMBER_OF_HASH_TABLES = -1;
-    int NUMBER_OF_NEIGHBOURS = 1; //Check possible errs
+    int NUMBER_OF_NEIGHBOURS = 1;
     double RANGE = -1.0;
     double delta = -1.0;
     string algorithm = "LSH";
     string metric = "discrete";
+    bool bf_filter = false;
 
     for (int i = 1; i < argc; i++)
     {
@@ -119,18 +120,10 @@ int main(int argc, char *argv[])
             tempd = argv[i + 1];
             delta = args_string_to_double(tempd);
         }
-        // else if (strcmp(argv[i], "-N") == 0)
-        // {
-        //     string tempN;
-        //     tempN = argv[i + 1];
-        //     NUMBER_OF_NEIGHBOURS = args_string_to_int(tempN);
-        // }
-        // else if (strcmp(argv[i], "-R") == 0)
-        // {
-        //     string tempR;
-        //     tempR = argv[i + 1];
-        //     RANGE = args_string_to_double(tempR);
-        // }
+        else if (strcmp(argv[i], "-bf_filter") == 0)
+        {
+            bf_filter = true;
+        }
     }
 
     //If no file is provided the program will provide command prompts for the user to enter.
@@ -169,24 +162,15 @@ int main(int argc, char *argv[])
             k_input = 14;
         }
     }
-    if (NUMBER_OF_HASH_TABLES == -1)
-        NUMBER_OF_HASH_TABLES = 5; //PARAM <L>
-    if (M == -1)
-        M = 10; //PARAM <M>
-    if (probes == -1)
-        probes = 2; //PARAM <probes>
-    if (delta == -1.0)
-        delta = 5; //PARAM <delta>
     
-
-    // cout << "FILE_NAME_INPUT: " << FILE_NAME_INPUT << endl;
-    // cout << "FILE_NAME_QUERY: " << FILE_NAME_QUERY << endl;
-    // cout << "FILE_NAME_LOG: " << FILE_NAME_LOG << endl;
-    // cout << "k_input: " << k_input << endl;
-    // cout << "NUMBER OF HASH TABLES: " << NUMBER_OF_HASH_TABLES << endl;
-    // cout << "NUMBER OF NEIGHBOURS: " << NUMBER_OF_NEIGHBOURS << endl;
-    // cout << "RANGE: " << RANGE << endl;
-
+    if (NUMBER_OF_HASH_TABLES == -1) NUMBER_OF_HASH_TABLES = 5; //PARAM <L>
+    
+    if (M == -1) M = 10; //PARAM <M>
+    
+    if (probes == -1) probes = 2; //PARAM <probes>
+    
+    if (delta == -1.0) delta = 1; //PARAM <delta>
+    
     int w_arg = 700; //Hardcoded value for w
     bool justOnce = true;
     int how_many_columns = 0;
@@ -302,18 +286,6 @@ int main(int argc, char *argv[])
             exit(0);
         }
         myfilequery.close();
-        
-        // for (int i = 0; i < how_many_rows; i++)
-        // {
-        //     cout << Input_Array[i]->id << endl;
-        //     myLogFile<<"END"<<endl;
-        // }
-
-        // for (int i = 0; i < query_rows; i++)
-        // {
-        //     cout << Query_Array[i]->id << endl;
-        //     myLogFile<<"END"<<endl;
-        // }
 
     }else if (algorithm == "Frechet"){
         
@@ -375,20 +347,6 @@ int main(int argc, char *argv[])
             exit(0);
         }
         myfilequery.close();
-
-        // for (int i = 0; i < how_many_rows; i++)
-        // {
-        //     Input_Array_Frechet[i]->displayVectorElementArray();
-        //     myLogFile<<"END"<<endl;
-        // }
-
-        // myLogFile << "NOW QUERY" << endl;
-        // for (int i = 0; i < query_rows; i++)
-        // {
-        //     Query_Array_Frechet[i]->displayVectorElementArray();
-        //     myLogFile<<"END"<<endl;
-        // }
-
 
     }
 
@@ -492,11 +450,18 @@ int main(int argc, char *argv[])
                 myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
 
-                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                if (curr_maf > last_maf){
-                    last_maf = curr_maf;
-                } 
-
+                if (currNeighbours == 0){
+                    
+                    double curr_maf = -1.0;
+                    if (hitrbf2->getDistance() != 0){
+                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                    }
+                    
+                    if (curr_maf > last_maf){
+                        last_maf = curr_maf;
+                    }     
+                }
+                
                 currNeighbours++;
             }
 
@@ -512,7 +477,13 @@ int main(int argc, char *argv[])
 
         myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        myLogFile << "MAF = " << last_maf << endl;
+        
+        if (last_maf != -1.0){
+            myLogFile << "MAF = " << last_maf << endl;
+        }else{
+            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
+        }
+        
 
 
     }else if (algorithm == "Hypercube"){
@@ -592,16 +563,21 @@ int main(int argc, char *argv[])
                 myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
 
-                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                if (curr_maf > last_maf){
-                    last_maf = curr_maf;
-                } 
+                if (currNeighbours == 0){
+                    
+                    double curr_maf = -1.0;
+                    if (hitrbf2->getDistance() != 0){
+                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                    }
+                    
+                    if (curr_maf > last_maf){
+                        last_maf = curr_maf;
+                    }     
+                }
 
                 currNeighbours++;
             }
 
-            //myLogFile << "tHypercube = " << duration_NN.count() << "[s]" << endl;
-            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
 
@@ -609,7 +585,12 @@ int main(int argc, char *argv[])
 
         myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        myLogFile << "MAF = " << last_maf << endl;
+        
+        if (last_maf != -1.0){
+            myLogFile << "MAF = " << last_maf << endl;
+        }else{
+            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
+        }
 
     
     }else if (algorithm == "Frechet" && metric == "discrete"){
@@ -620,7 +601,8 @@ int main(int argc, char *argv[])
         int M = UM(e);
         cout << M << endl;
 
-        vectorized_input_storage = new VectorElement * [how_many_rows];
+        vectorized_input_storage = new VectorElement * [NUMBER_OF_HASH_TABLES*how_many_rows];
+        int vec_counter = 0;
        
         Hash_Array = new LSHash *[NUMBER_OF_HASH_TABLES];
         for (int l = 0; l < NUMBER_OF_HASH_TABLES; l++){
@@ -649,7 +631,9 @@ int main(int argc, char *argv[])
                 Hash_Array[l]->insertItem(vec2add, r_array);
                 
                 //TODO: ALSO refactor
-                vectorized_input_storage[i] = vec2add;
+                vectorized_input_storage[vec_counter] = vec2add;
+                vec_counter++;
+                
                 Input_Array_Frechet[i]->gridElementTwoD.clear();    
                 //myLogFile << "END OF ARR" << endl;
             }
@@ -659,7 +643,8 @@ int main(int argc, char *argv[])
         }
 
         //query stuff
-        vectorized_query_storage = new VectorElement *[query_rows];
+        vectorized_query_storage = new VectorElement *[NUMBER_OF_HASH_TABLES*query_rows];
+        int query_counter = 0;
 
         double tTrueSum = 0.0;
         double tApproxSum = 0.0;
@@ -707,8 +692,9 @@ int main(int argc, char *argv[])
 
                 Hash_Array[j]->calculateDistanceAndFindN(vec2add, r_array, i, NUMBER_OF_NEIGHBOURS, "Frechet");
 
-                vectorized_query_storage[i] = vec2add;
-                
+                vectorized_query_storage[query_counter] = vec2add;
+                query_counter++;
+
                 for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
                 { //Add a idDistancePair object for every neighbor.
 
@@ -745,28 +731,37 @@ int main(int argc, char *argv[])
                 myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
 
-                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                if (curr_maf > last_maf){
-                    last_maf = curr_maf;
-                } 
+                if (currNeighbours == 0){
+                    
+                    double curr_maf = -1.0;
+                    if (hitrbf2->getDistance() != 0){
+                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                    }
+                    
+                    if (curr_maf > last_maf){
+                        last_maf = curr_maf;
+                    }     
+                }
 
                 currNeighbours++;
             }
 
-            //myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
-            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
 
             //reset the list for new q
             PairList.clear();
 
-            //cout << "query end" << endl;            
         }
 
         myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        myLogFile << "MAF = " << last_maf << endl;//TODO
+        
+        if (last_maf != -1.0){
+            myLogFile << "MAF = " << last_maf << endl;
+        }else{
+            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
+        }
 
     
     }else{
@@ -831,8 +826,8 @@ int main(int argc, char *argv[])
             const auto before_BF = clock::now();
             for (int l = 0; l < how_many_rows; l++)
             {
-                //Input_Array[l]->getL2Distance(Query_Array[i]);
-                double cfd = ret_CFD(Input_Array_Frechet[l],Query_Array_Frechet[i]);
+                //double cfd = 0.0;
+                double cfd = ret_CFD(Input_Array_Frechet[l],Query_Array_Frechet[i], bf_filter);
 
                 idDistancePair *Pair = new idDistancePair(Input_Array_Frechet[l]->id, cfd);
                 PairListBF.push_back(*Pair);
@@ -887,10 +882,17 @@ int main(int argc, char *argv[])
                 myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
                 myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
 
-                double curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                if (curr_maf > last_maf){
-                    last_maf = curr_maf;
-                } 
+                if (currNeighbours == 0){
+                    
+                    double curr_maf = -1.0;
+                    if (hitrbf2->getDistance() != 0){
+                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+                    }
+                    
+                    if (curr_maf > last_maf){
+                        last_maf = curr_maf;
+                    }     
+                }
 
                 currNeighbours++;
             }
@@ -902,9 +904,16 @@ int main(int argc, char *argv[])
 
         myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
         myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        myLogFile << "MAF = " << last_maf << endl;
+        
+        if (last_maf != -1.0){
+            myLogFile << "MAF = " << last_maf << endl;
+        }else{
+            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
+        }
 
     }
+
+    
 
     //---DELETE MEMORY---
 
@@ -939,18 +948,40 @@ int main(int argc, char *argv[])
         for (int i = 0; i < how_many_rows; i++)
         {
             delete Input_Array_Frechet[i];
-            delete vectorized_input_storage[i];
+            vectorized_input_storage[i]->original_curve = NULL;
         }
         delete[] Input_Array_Frechet;
+
+        if (metric == "discrete"){
+            for (int i = 0; i < how_many_rows*NUMBER_OF_HASH_TABLES; i++){
+                delete vectorized_input_storage[i];
+            }
+        }
+        else{
+            for (int i = 0; i < how_many_rows; i++){
+                delete vectorized_input_storage[i];
+            }
+        }
         delete[] vectorized_input_storage;
+        
 
         for (int i = 0; i < query_rows; i++)
         {
             delete Query_Array_Frechet[i];
-            delete vectorized_query_storage[i];
+            vectorized_query_storage[i]->original_curve = NULL;   
         }
-
         delete[] Query_Array_Frechet;
+
+        if (metric == "discrete"){
+            for (int i = 0; i < query_rows*NUMBER_OF_HASH_TABLES; i++){
+                delete vectorized_query_storage[i];
+            }
+        }
+        else{
+            for (int i = 0; i < query_rows; i++){
+                delete vectorized_query_storage[i];
+            }
+        }
         delete[] vectorized_query_storage;
 
     }

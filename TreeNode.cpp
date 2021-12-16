@@ -117,13 +117,8 @@ CurveElement* TreeNode::MeanCurveTraversal(TreeNode* current){
     //     myLogFile << "size " << mean_curve->arrayElementTwoD.size() << std::endl;
     // }
     
-    // now deal with the node
-    //cout << root->curve << " " << root->data << " end ";
-
-    
 
     return mean_curve;
-
 
 }
 
@@ -131,7 +126,10 @@ CurveElement* TreeNode::MeanCurveTraversal(TreeNode* current){
 void TreeNode::DeleteNode(TreeNode* current)
 {
     if (current == NULL) return;
- 
+
+    //std::cout << " del curve" << std::endl;
+
+    
     /* first delete both subtrees */
     DeleteNode(current->left);
     DeleteNode(current->right);
@@ -139,7 +137,10 @@ void TreeNode::DeleteNode(TreeNode* current)
     /* then delete the node */
     //cout << "\n Deleting node: " << node->data;
 
-    if(Curve_Object != NULL) delete Curve_Object;
+    if(current->Curve_Object != NULL){
+       // std::cout << " del curve" << std::endl;
+      //  delete current->Curve_Object;
+    } 
 
     delete current;
 }

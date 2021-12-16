@@ -24,6 +24,6 @@ int string_into_int(std::string &s);
 int args_string_to_int(std::string &x);
 double args_string_to_double(std::string &x);
 int testL2();
-double ret_CFD(CurveElement*,CurveElement*);
+double ret_CFD(CurveElement*,CurveElement*,bool);
 
 #endif /* HELPERS_H */

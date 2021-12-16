@@ -12,8 +12,6 @@
 
 using namespace std;
 
-//TODO: leave cases for unsigned
-
 double min_3(double x, double y, double z)
 {
     return std::min(std::min(x, y), z);
@@ -37,6 +35,7 @@ double pointL2(double x1, double y1, double x2, double y2)
     return sqrt(distance);
 }
 
+//void discreteFrechet(double **table, int i, int j, vector<tuple<int,double>>& v1, vector<tuple<int,double>>& v2) //how_many_columns -1 
 void discreteFrechet(double **table, int i, int j, vector<tuple<unsigned int,double>>& v1, vector<tuple<unsigned int,double>>& v2) //how_many_columns -1 
 {
     //double table[i][j]{-1.0};
@@ -57,13 +56,32 @@ void discreteFrechet(double **table, int i, int j, vector<tuple<unsigned int,dou
         double y2 = get<1>(v2[l]);
         double temp = pointL2(x1,y1,x2,y2); //abs(v1[0] - v2[l]);
         
-        table[0][l] = max(table[0][l - 1], temp); //first row (except the first column)
-
         if (l == 0)
         { //first row first column
             table[0][0] = c;
+        }else{
+            table[0][l] = max(table[0][l - 1], temp); //first row (except the first column)
         }
+        
     }
+
+    // for (int k = 0; k < j; k++)
+    // {
+       
+    //     double x1 = get<0>(v1[k]);
+    //     double y1 = get<1>(v1[k]);
+    //     double x2 = get<0>(v2[0]);
+    //     double y2 = get<1>(v2[0]);
+    //     double temp = pointL2(x1,y1,x2,y2); //abs(v1[0] - v2[l]);
+        
+    //     if (k == 0)
+    //     { //first row first column
+    //         table[0][0] = c;
+    //     }else{
+    //         table[k][0] = max(table[k - 1][0], temp); //first row (except the first column)
+    //     }
+        
+    // }
 
     for (int row = 1; row < i; row++) //for the rest of the table(second row every column)
     {
@@ -105,6 +123,7 @@ void discreteFrechet(double **table, int i, int j, vector<tuple<unsigned int,dou
     //return table;//[i-1][j-1];
 }
 
+//double ret_DFD(int i, int j, vector<tuple<int,double>>& v1, vector<tuple<int,double>>& v2){
 double ret_DFD(int i, int j, vector<tuple<unsigned int,double>>& v1, vector<tuple<unsigned int,double>>& v2){
 
 
@@ -145,6 +164,7 @@ int minIndex(double x, double y, double z)
     return -1;
 }
 
+//void optimalTraversal(vector<tuple <int, double,int, double > >& traversal, double **table, int m1, int m2, std::vector<std::tuple<int,double>>& v1, std::vector<std::tuple<int,double>>& v2){
 void optimalTraversal(vector<tuple <unsigned int, double,unsigned int, double > >& traversal, double **table, int m1, int m2, std::vector<std::tuple<unsigned int,double>>& v1, std::vector<std::tuple<unsigned int,double>>& v2){
 
 
@@ -225,6 +245,7 @@ CurveElement* MeanCurve(CurveElement* P, CurveElement* Q){
 
     discreteFrechet(table,i,i,P->arrayElementTwoD,Q->arrayElementTwoD);         
 
+    //vector<tuple < int, double, int, double > > traversal;
     vector<tuple < unsigned int, double, unsigned int, double > > traversal;
     optimalTraversal(traversal,table,i,i,P->arrayElementTwoD,Q->arrayElementTwoD);
     //myLogFile << traversal.size() << endl;

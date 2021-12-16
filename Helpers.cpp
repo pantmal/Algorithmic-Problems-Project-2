@@ -11,13 +11,13 @@
 #include "Helpers.h"
 #include "CurveElement.h"
 
-#include "config.hpp"
-#include "curve.hpp"
-#include "frechet.hpp"
-#include "interval.hpp"
-#include "point.hpp"
-#include "simplification.hpp"
-#include "types.hpp"
+#include "fred/config.hpp"
+#include "fred/curve.hpp"
+#include "fred/frechet.hpp"
+#include "fred/interval.hpp"
+#include "fred/point.hpp"
+#include "fred/simplification.hpp"
+#include "fred/types.hpp"
 
 
 using namespace std;
@@ -94,6 +94,8 @@ int binarySearch(double array[], double target, int size)
     return mid;
 }
 
+
+
 //The rest are debug stuff.
 int testL2()
 {
@@ -154,26 +156,46 @@ double args_string_to_double(std::string &x)
     return num;
 }
 
-double ret_CFD(CurveElement* input, CurveElement* query){
+double ret_CFD(CurveElement* input, CurveElement* query, bool bf_filter){
 
   
   Points v1_points(1);
   
-  for (int i = 0; i < input->filteredElementOneD.size(); i++){
+  if (bf_filter){
+    for (int i = 0; i < input->filteredElementOneD.size(); i++){
       Point p(1); //= new Point(1);
       p.set(0,input->filteredElementOneD[i]);
       v1_points.add(p);
+    }
+  }else{
+    for (int i = 0; i < input->arrayElementOneD.size(); i++){
+      Point p(1); //= new Point(1);
+      p.set(0,input->arrayElementOneD[i]);
+      v1_points.add(p);
+    }
   }
+
+  
 
   //vector<double> v2 = input->filteredElementOneD;
 
   Points v2_points(1);
 
-  for (int i = 0; i < query->filteredElementOneD.size(); i++){
+  if (bf_filter){
+    for (int i = 0; i < query->filteredElementOneD.size(); i++){
       Point p(1);// = new Point(1);
       p.set(0,query->filteredElementOneD[i]);
       v2_points.add(p);
+    }
+  }else{
+    for (int i = 0; i < query->arrayElementOneD.size(); i++){
+      Point p(1);// = new Point(1);
+      p.set(0,query->arrayElementOneD[i]);
+      v2_points.add(p);
+    }
   }
+
+  
 
   Curve* c1 = new Curve(v1_points,"input");
   Curve* c2 = new Curve(v2_points,"query");

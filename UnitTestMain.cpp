@@ -20,13 +20,13 @@
 using namespace CppUnit;
 using namespace std;
 
-//TODO: Add binarySearch
 
 class Suite : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(Suite);
     CPPUNIT_TEST(testCheckTableF);
     CPPUNIT_TEST(testCheckHammingDist);
+    CPPUNIT_TEST(testCheckBinarySearch);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -36,6 +36,7 @@ public:
 protected:
     void testCheckTableF(void);
     void testCheckHammingDist(void);
+    void testCheckBinarySearch(void);
 
 private:
 
@@ -93,6 +94,30 @@ void Suite::testCheckHammingDist(void)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 1", dist2, 1);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 2", dist3, 2);
 
+
+}
+
+void Suite::testCheckBinarySearch(void)
+{
+
+    double arr_check[6];
+    for (int i = 0; i < 6; i++){
+        arr_check[i] = i; 
+    }
+
+    int idx1 = binarySearch(arr_check,-1,6); //0
+    int idx2 = binarySearch(arr_check, 0,6); //0
+    int idx3 = binarySearch(arr_check, 7,6); //5
+    int idx4 = binarySearch(arr_check, 3,6); //3
+    int idx5 = binarySearch(arr_check, 1.5,6); //2
+    int idx6 = binarySearch(arr_check, 3.5,6); //4
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 0", idx1, 0);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 0", idx2, 0);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 5", idx3, 5);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 3", idx4, 3);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 2", idx5, 2);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning index 4", idx6, 4);
 
 }
 
