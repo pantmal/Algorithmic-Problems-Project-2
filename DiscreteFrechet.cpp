@@ -62,35 +62,35 @@ void discreteFrechet(double **table, int i, int j, vector<tuple<double,double>>&
         }    
     }
 
-    // for (int k = 0; k < i; k++)
-    // {
-    //     double x1 = get<0>(v1[k]);
-    //     double y1 = get<1>(v1[k]);
-    //     double x2 = get<0>(v2[0]);
-    //     double y2 = get<1>(v2[0]);
-    //     double temp = pointL2(x1,y1,x2,y2); //abs(v1[0] - v2[l]);
-    //     if (k == 0)
-    //     { //first row first column
-    //         table[0][0] = c;
-    //     }else{
-    //         table[k][0] = max(table[k - 1][0], temp); //first row (except the first column)
-    //     }
-    // }
+    for (int k = 0; k < i; k++)
+    {
+        double x1 = get<0>(v1[k]);
+        double y1 = get<1>(v1[k]);
+        double x2 = get<0>(v2[0]);
+        double y2 = get<1>(v2[0]);
+        double temp = pointL2(x1,y1,x2,y2); //abs(v1[0] - v2[l]);
+        if (k == 0)
+        { //first row first column
+            table[0][0] = c;
+        }else{
+            table[k][0] = max(table[k - 1][0], temp); //first column (except the first row)
+        }
+    }
 
     for (int row = 1; row < i; row++) //for the rest of the table(second row every column)
     {
-        for (int col = 0; col < j; col++)
+        for (int col = 1; col < j; col++)
         {
-            if (col == 0)
-            {
-                double x1 = get<0>(v1[row]);
-                double y1 = get<1>(v1[row]);
-                double x2 = get<0>(v2[0]);
-                double y2 = get<1>(v2[0]);
-                double temp = pointL2(x1,y1,x2,y2); //abs(v1[row] - v2[0]);
+            // if (col == 0)
+            // {
+            //     double x1 = get<0>(v1[row]);
+            //     double y1 = get<1>(v1[row]);
+            //     double x2 = get<0>(v2[0]);
+            //     double y2 = get<1>(v2[0]);
+            //     double temp = pointL2(x1,y1,x2,y2); //abs(v1[row] - v2[0]);
                 
-                table[row][col] = max(table[row - 1][1], temp);
-            } //for every row the first column
+            //     table[row][col] = max(table[row - 1][1], temp);
+            // } //for every row the first column
             
 
             double x1 = get<0>(v1[row]);

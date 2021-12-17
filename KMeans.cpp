@@ -679,7 +679,7 @@ void KMeans::update_curve(){
         //myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
         //cout << "here f" << endl;
         
-        ClusterArray[k]->centroid_frechet = final_mean;//del the old?
+        ClusterArray[k]->centroid_frechet = final_mean;
 
         MeanCurveTree->DeleteNode(MeanCurveTree->left);
         MeanCurveTree->DeleteNode(MeanCurveTree->right);

@@ -39,7 +39,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
             arrayElementOneD.push_back(temp);
             filteredElementOneD.push_back(0.0);
             gridElementOneD.push_back({0.0});
-        }    
+        }
         counter++;
     }
     
@@ -138,7 +138,7 @@ string CurveElement::Vectorization2d(int columns, int M){
 void CurveElement::Filtering(double e){
 
     
-    filteredElementOneD.clear(); //TODO: MAYBE DEL? ALSO ADD IT FOR GRIDS
+    filteredElementOneD.clear();
     vector<double> v = arrayElementOneD;
     
     auto it = v.begin();
@@ -173,6 +173,8 @@ void CurveElement::Filtering(double e){
 }
 
 void CurveElement::Snapping1d(double t, double delta){
+
+    gridElementOneD.clear();
 
     int filt_size = filteredElementOneD.size(); 
     for (int j = 0; j < filt_size; j++ ){

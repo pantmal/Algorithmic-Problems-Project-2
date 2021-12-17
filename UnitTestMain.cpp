@@ -21,59 +21,42 @@ using namespace CppUnit;
 using namespace std;
 
 
-class Suite : public CppUnit::TestFixture
-{
+class Suite : public CppUnit::TestFixture {
+    
     CPPUNIT_TEST_SUITE(Suite);
     CPPUNIT_TEST(testCheckTableF);
     CPPUNIT_TEST(testCheckHammingDist);
     CPPUNIT_TEST(testCheckBinarySearch);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp(void);
-    void tearDown(void);
+private:
+
+    TableF *TableOfValuesF;
 
 protected:
     void testCheckTableF(void);
     void testCheckHammingDist(void);
     void testCheckBinarySearch(void);
 
-private:
-
-    TableF *TableOfValuesF;
+public:
+    void setUp(void);
+    void tearDown(void);
     
 };
 
-//-----------------------------------------------------------------------------
 
-void Suite::testCheckTableF(void)
-{
+void Suite::testCheckTableF(void){
+
+
     int position_zero = TableOfValuesF->checkItem(2);
     int position_one = TableOfValuesF->checkItem(14);
     int position_minus = TableOfValuesF->checkItem(33);
 
-    // simple asserts
-    // CPPUNIT_ASSERT(position == 18);
-    // CPPUNIT_ASSERT_MESSAGE("Must be 18", position == 18);
-
-    // // asserting equality:
-    // CPPUNIT_ASSERT_EQUAL(position, 18);
     
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning bucket #0", position_zero, 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning bucket #1", position_one, 1);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning -1 for non-existing item", position_minus, -1);
     
-
-    // exception asserts:
-    //CPPUNIT_ASSERT_THROW(ClassImTesting - > testAge(age - 1), WrongAgeException);
-    //CPPUNIT_ASSERT_NO_THROW(ClassImTesting - > testAge(age), WrongAgeException);
-
-    // inverse asserts:
-    // if (position != 18)
-    //   CPPUNIT_FAIL("Must be 18");
-    // CPPUNIT_ASSERT_ASSERTION_FAIL(CPP_UNIT_ASSERT(position != 18));
-
-    // CPPUNIT_ASSERT(5 == TableOfValuesF->Addition(2,3));testCheckHyperCube
 }
 
 void Suite::testCheckHammingDist(void)
@@ -83,17 +66,10 @@ void Suite::testCheckHammingDist(void)
     int dist2 = hammingDistance("000","001");
     int dist3 = hammingDistance("000","011");
 
-    // simple asserts
-    // CPPUNIT_ASSERT(position == 18);
-    // CPPUNIT_ASSERT_MESSAGE("Must be 18", position == 18);
 
-    // // asserting equality:
-    // CPPUNIT_ASSERT_EQUAL(position, 18);
-    
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 0", dist1, 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 1", dist2, 1);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 2", dist3, 2);
-
 
 }
 
@@ -148,32 +124,36 @@ CPPUNIT_TEST_SUITE_REGISTRATION( Suite );
 
 int main(int argc, char* argv[])
 {
-    // informs test-listener about testresults
-    CPPUNIT_NS::TestResult testresult;
+    //informs test-listener about testresults
+    CPPUNIT_NS::TestResult test_result_obj;
 
-    // register listener for collecting the test-results
-    CPPUNIT_NS::TestResultCollector collectedresults;
-    testresult.addListener (&collectedresults);
+    //register listener for collecting the test-results
+    CPPUNIT_NS::TestResultCollector collected_results;
+    test_result_obj.addListener(&collected_results);
 
-    // register listener for per-test progress output
-    CPPUNIT_NS::BriefTestProgressListener progress;
-    testresult.addListener (&progress);
+    //insert test-suite at test-runner by registry
+    CPPUNIT_NS::TestRunner runner;
 
-    // insert test-suite at test-runner by registry
-    CPPUNIT_NS::TestRunner testrunner;
-    testrunner.addTest (CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
-    testrunner.run(testresult);
+    runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
+    runner.run(test_result_obj);
 
-    // output results in compiler-format
-    CPPUNIT_NS::CompilerOutputter compileroutputter(&collectedresults, std::cerr);
-    compileroutputter.write ();
+    //output results in compiler-format
+    CPPUNIT_NS::CompilerOutputter cli_output(&collected_results, cerr);
+    cli_output.write();
 
-    // Output XML for Jenkins CPPunit plugin
-    ofstream xmlFileOut("cppTableFTest.xml");
-    XmlOutputter xmlOut(&collectedresults, xmlFileOut);
-    xmlOut.write();
+    //Output XML
+    ofstream xml_out_obj("Project2UnitTests.xml");
+    XmlOutputter xml_out(&collected_results, xml_out_obj);
+    xml_out.write();
 
-    // return 0 if tests were successful
-    return collectedresults.wasSuccessful() ? 0 : 1;
+    //return 0 if tests were successful
+    if (collected_results.wasSuccessful()){
+        return 0;
+    }else{
+        return 1;
+    }
+
+    return -1;
+
 }
 
