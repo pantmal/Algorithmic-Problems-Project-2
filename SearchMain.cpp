@@ -207,6 +207,12 @@ int main(int argc, char *argv[])
         while (myfile)
         {
             getline(myfile, mystring);
+            string comma = ",";
+            if (mystring.find(comma) != std::string::npos)
+            {
+                // cout << "removing the commas" << endl;
+                replace(mystring.begin(), mystring.end(), ',', ' ');
+            }
             stringstream sso(mystring);
             sso >> temp;
             while (justOnce && sso >> tempString)
@@ -248,6 +254,12 @@ int main(int argc, char *argv[])
             while (myfile)
             {
                 getline(myfile, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
@@ -272,6 +284,12 @@ int main(int argc, char *argv[])
             while (myfilequery)
             {
                 getline(myfilequery, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (query_i < query_rows)
                 {
@@ -298,6 +316,12 @@ int main(int argc, char *argv[])
             while (myfile)
             {
                 getline(myfile, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
@@ -328,6 +352,12 @@ int main(int argc, char *argv[])
             while (myfilequery)
             {
                 getline(myfilequery, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (query_i < query_rows)
                 {
@@ -365,6 +395,10 @@ int main(int argc, char *argv[])
 
     LSHash **Hash_Array;
 
+    double tTrueSum = 0.0;
+    double tApproxSum = 0.0;
+    double last_maf = -1.0;
+
     if (algorithm == "LSH"){
         
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
@@ -385,9 +419,6 @@ int main(int argc, char *argv[])
 
    
         //And now for each query...
-        double tTrueSum = 0.0;
-        double tApproxSum = 0.0;
-        double last_maf = -1.0;
         list<idDistancePair> PairList;
         for (int i = 0; i < query_rows; i++)
         {
@@ -436,37 +467,8 @@ int main(int argc, char *argv[])
             PairList.erase(last, PairList.end());
             const sec duration_NN = clock::now() - before_NN;
 
-            //Output of NN search.
-            int currNeighbours = 0;
-            list<idDistancePair>::iterator hitr1 = PairList.begin();
-            list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
-            for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
-            {
-                if (currNeighbours == NUMBER_OF_NEIGHBOURS)
-                    break;
-
-                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
-                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
-                myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
-
-                if (currNeighbours == 0){
-                    
-                    double curr_maf = -1.0;
-                    if (hitrbf2->getDistance() != 0){
-                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                    }
-                    
-                    if (curr_maf > last_maf){
-                        last_maf = curr_maf;
-                    }     
-                }
-                
-                currNeighbours++;
-            }
-
-            //myLogFile << "tLSH = " << duration_NN.count() << "[s]" << endl;
-            //myLogFile << "tTrue = " << duration_BF.count() << "[s]" << endl;
+            last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
+            
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
             
@@ -474,16 +476,6 @@ int main(int argc, char *argv[])
             PairList.clear();
             
         }
-
-        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
-        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        
-        if (last_maf != -1.0){
-            myLogFile << "MAF = " << last_maf << endl;
-        }else{
-            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
-        }
-        
 
 
     }else if (algorithm == "Hypercube"){
@@ -498,9 +490,6 @@ int main(int argc, char *argv[])
         //Initialize the arrays for queries.
         Cube_Obj.initNeighboursInfo(query_rows);
 
-        double tTrueSum = 0.0;
-        double tApproxSum = 0.0;
-        double last_maf = -1.0;
         //And now for each query...
         for (int i = 0; i < query_rows; i++)
         {
@@ -547,49 +536,11 @@ int main(int argc, char *argv[])
             PairList.sort(cmpListPair); //sort the list to get nearest values first.
             const sec duration_NN = clock::now() - before_NN;
 
-            //coutLineWithMessage("NEAREST NEIGHBOURS ARE: ");
-
-            //Output of NN search.
-            int currNeighbours = 0;
-            list<idDistancePair>::iterator hitr1 = PairList.begin();
-            list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
-            for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
-            {
-                if (currNeighbours == NUMBER_OF_NEIGHBOURS)
-                    break;
-
-                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
-                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
-                myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
-
-                if (currNeighbours == 0){
-                    
-                    double curr_maf = -1.0;
-                    if (hitrbf2->getDistance() != 0){
-                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                    }
-                    
-                    if (curr_maf > last_maf){
-                        last_maf = curr_maf;
-                    }     
-                }
-
-                currNeighbours++;
-            }
+            last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
 
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
 
-        }
-
-        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
-        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        
-        if (last_maf != -1.0){
-            myLogFile << "MAF = " << last_maf << endl;
-        }else{
-            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
         }
 
     
@@ -646,9 +597,6 @@ int main(int argc, char *argv[])
         vectorized_query_storage = new VectorElement *[NUMBER_OF_HASH_TABLES*query_rows];
         int query_counter = 0;
 
-        double tTrueSum = 0.0;
-        double tApproxSum = 0.0;
-        double last_maf = -1.0;
         list<idDistancePair> PairList;
         for (int i = 0; i < query_rows; i++)
         {
@@ -717,34 +665,7 @@ int main(int argc, char *argv[])
             PairList.erase(last, PairList.end());
             const sec duration_NN = clock::now() - before_NN;
 
-            //Output of NN search.
-            int currNeighbours = 0;
-            list<idDistancePair>::iterator hitr1 = PairList.begin();
-            list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
-            for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
-            {
-                if (currNeighbours == NUMBER_OF_NEIGHBOURS)
-                    break;
-
-                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
-                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
-                myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
-
-                if (currNeighbours == 0){
-                    
-                    double curr_maf = -1.0;
-                    if (hitrbf2->getDistance() != 0){
-                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                    }
-                    
-                    if (curr_maf > last_maf){
-                        last_maf = curr_maf;
-                    }     
-                }
-
-                currNeighbours++;
-            }
+            last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
 
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
@@ -753,16 +674,6 @@ int main(int argc, char *argv[])
             PairList.clear();
 
         }
-
-        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
-        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        
-        if (last_maf != -1.0){
-            myLogFile << "MAF = " << last_maf << endl;
-        }else{
-            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
-        }
-
     
     }else{
 
@@ -802,9 +713,6 @@ int main(int argc, char *argv[])
 
         vectorized_query_storage = new VectorElement * [query_rows];
 
-        double tTrueSum = 0.0;
-        double tApproxSum = 0.0;
-        double last_maf = -1.0;
         //And now for each query...
         list<idDistancePair> PairList;
         for (int i = 0; i < query_rows; i++)
@@ -866,54 +774,24 @@ int main(int argc, char *argv[])
             PairList.sort(cmpListPair);                                //sort the list to get nearest values first.
             const sec duration_NN = clock::now() - before_NN;
 
-            //coutLineWithMessage("NEAREST NEIGHBOURS ARE: ");
-
-            //Output of NN search.
-            int currNeighbours = 0;
-            list<idDistancePair>::iterator hitr1 = PairList.begin();
-            list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
-            for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
-            {
-                if (currNeighbours == NUMBER_OF_NEIGHBOURS)
-                    break;
-
-                myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
-                myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
-                myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
-                myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
-
-                if (currNeighbours == 0){
-                    
-                    double curr_maf = -1.0;
-                    if (hitrbf2->getDistance() != 0){
-                        curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
-                    }
-                    
-                    if (curr_maf > last_maf){
-                        last_maf = curr_maf;
-                    }     
-                }
-
-                currNeighbours++;
-            }
+            last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
 
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
 
         }
 
-        myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
-        myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
-        
-        if (last_maf != -1.0){
-            myLogFile << "MAF = " << last_maf << endl;
-        }else{
-            myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
-        }
-
     }
 
+    myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
+    myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
     
+    if (last_maf != -1.0){
+        myLogFile << "MAF = " << last_maf << endl;
+    }else{
+        myLogFile << "MAF cannot be defined because all true distances are 0." << endl;
+    }
+
 
     //---DELETE MEMORY---
 

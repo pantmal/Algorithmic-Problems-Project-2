@@ -138,8 +138,11 @@ void TreeNode::DeleteNode(TreeNode* current)
     //cout << "\n Deleting node: " << node->data;
 
     if(current->Curve_Object != NULL){
-       // std::cout << " del curve" << std::endl;
-      //  delete current->Curve_Object;
+        if (current->Curve_Object->mark_deletion){
+          delete current->Curve_Object;  
+        }
+        // std::cout << " del curve" << std::endl;
+       //  delete current->Curve_Object;
     } 
 
     delete current;

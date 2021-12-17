@@ -13,10 +13,10 @@ class CurveElement
 public:
     std::string id; //name/id of the element
     int size;
-    std::vector<std::tuple<unsigned int,double>> arrayElementTwoD;
+    std::vector<std::tuple<double,double>> arrayElementTwoD;
     std::vector<double>  arrayElementOneD;
     
-    std::vector<std::tuple<int,double>> gridElementTwoD;//TODO: CHANGE IF ISSUE
+    std::vector<std::tuple<double,double>> gridElementTwoD;
     std::vector<double>  gridElementOneD;
 
     std::vector<double>  filteredElementOneD;
@@ -27,9 +27,11 @@ public:
     bool assigned;
     std::list<int> assigned_clusters;
 
+    bool mark_deletion;
+
 public:
     CurveElement(int, std::string, int,std::string);
-    CurveElement(std::vector<std::tuple <unsigned int, double,unsigned int, double > >& traversal);
+    CurveElement(std::vector<std::tuple <double, double, double, double > >& traversal);
     ~CurveElement();
     void setDistance(int x)
     {

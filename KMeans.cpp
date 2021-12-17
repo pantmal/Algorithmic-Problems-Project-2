@@ -631,6 +631,11 @@ void KMeans::update_curve(){
 
 
     for (int k = 0; k < clusters; k++){
+
+        if(ClusterArray[k]->centroid_frechet->mark_deletion){
+            delete ClusterArray[k]->centroid_frechet;
+            ClusterArray[k]->centroid_frechet = NULL;
+        }
        
         int list_size = ClusterArray[k]->frechet_elements.size();
         if (list_size == 0){
@@ -673,11 +678,13 @@ void KMeans::update_curve(){
         //final_mean->displayVectorElementGrid();
         //myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
         //cout << "here f" << endl;
-
+        
         ClusterArray[k]->centroid_frechet = final_mean;//del the old?
 
-        MeanCurveTree->DeleteNode(MeanCurveTree);
+        MeanCurveTree->DeleteNode(MeanCurveTree->left);
+        MeanCurveTree->DeleteNode(MeanCurveTree->right);
     }
+    
 
 }
 

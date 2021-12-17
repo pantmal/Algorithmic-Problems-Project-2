@@ -12,6 +12,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 {
 
     assigned = false;
+    mark_deletion = false;
 
     QueryTrickid = new unsigned int[numberOfHashTables]; //gets set when the vector element gets into an LSH bucket
     
@@ -20,7 +21,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
     id = "0";
     double temp;
-    unsigned int counter = 0;
+    int counter = 0;
     distanceCurrQ = 0;
     
     size = dimensions;
@@ -36,8 +37,8 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
             gridElementTwoD.push_back({0,0.0});
         }else{
             arrayElementOneD.push_back(temp);
-            //grid?
             filteredElementOneD.push_back(0.0);
+            gridElementOneD.push_back({0.0});
         }    
         counter++;
     }
@@ -45,16 +46,18 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
 }
 
-CurveElement::CurveElement(std::vector<std::tuple <unsigned int, double, unsigned int, double > >& traversal){
+CurveElement::CurveElement(std::vector<std::tuple <double, double, double, double > >& traversal){
 
+    
+    mark_deletion = true;
 
     for (const auto &i : traversal){
-        unsigned int Px = get<0>(i);
+        double Px = get<0>(i);
         double Py = get<1>(i);
-        unsigned int Qx = get<2>(i);
+        double Qx = get<2>(i);
         double Qy = get<3>(i);
 
-        unsigned int mean_x = (Px + Qx) / 2;
+        double mean_x = (Px + Qx) / 2;
         double mean_y = (Py + Qy) / 2;
 
         arrayElementTwoD.push_back({mean_x,mean_y});
@@ -67,15 +70,15 @@ void CurveElement::Snapping2d(double t1, double t2, double delta, int columns){
 
     gridElementTwoD.clear();
 
-    int prev_x = 0;
+    double prev_x = 0;
     double prev_y = 0;
     for (int j = 0; j < columns; j++){
         
         //x = floor((x-t)/d + 1/2) * d + t
-        int x = get<0>( arrayElementTwoD[j]);
+        double x = get<0>( arrayElementTwoD[j]);
         double y = get<1>( arrayElementTwoD[j]);
         
-        int grid_x = (floor((abs(x-t1)/delta) + 0.5) * delta) + t1;
+        double grid_x = (floor((abs(x-t1)/delta) + 0.5) * delta) + t1;
         double grid_y = (floor((abs(y-t2)/delta) + 0.5) * delta) + t2;
         
         if (j != 0){
@@ -104,7 +107,7 @@ string CurveElement::Vectorization2d(int columns, int M){
     vector<double>  VectorizedCurve;
     int grid_size = gridElementTwoD.size();
     for (int v = 0; v < grid_size ;v++ ){
-        int x = get<0>( gridElementTwoD[v]);
+        double x = get<0>( gridElementTwoD[v]);
         double y = get<1>( gridElementTwoD[v]);
 
         VectorizedCurve.push_back(x);
@@ -319,5 +322,7 @@ CurveElement::~CurveElement()
 {
 
    // delete[] arrayVectorElement;
-    delete[] QueryTrickid;
+    if (!mark_deletion){
+        delete[] QueryTrickid;
+    }
 }

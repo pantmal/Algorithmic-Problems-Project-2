@@ -94,7 +94,40 @@ int binarySearch(double array[], double target, int size)
     return mid;
 }
 
+double OutputNN(list<idDistancePair>& PairList, list<idDistancePair>& PairListBF, int NUMBER_OF_NEIGHBOURS, double last_maf){
 
+
+    int currNeighbours = 0;
+    list<idDistancePair>::iterator hitr1 = PairList.begin();
+    list<idDistancePair>::iterator hitrbf2 = PairListBF.begin();
+    for (; hitr1 != PairList.end() && hitrbf2 != PairListBF.end(); ++hitr1, ++hitrbf2)
+    {
+        if (currNeighbours == NUMBER_OF_NEIGHBOURS)
+            break;
+
+        myLogFile << "Approximate Nearest neighbor-" << (currNeighbours + 1) << ": " << hitr1->getId() << endl;
+        myLogFile << "True Nearest neighbor-" << (currNeighbours + 1) << ": " << hitrbf2->getId() << endl;
+        myLogFile << "distanceApproximate: " << hitr1->getDistance() << endl;
+        myLogFile << "distanceTrue: " << hitrbf2->getDistance() << endl;
+
+        if (currNeighbours == 0){
+            
+            double curr_maf = -1.0;
+            if (hitrbf2->getDistance() != 0){
+                curr_maf = hitr1->getDistance() / hitrbf2->getDistance();
+            }
+            
+            if (curr_maf > last_maf){
+                last_maf = curr_maf;
+            }     
+        }
+        
+        currNeighbours++;
+    }
+
+    return last_maf;
+
+}
 
 //The rest are debug stuff.
 int testL2()

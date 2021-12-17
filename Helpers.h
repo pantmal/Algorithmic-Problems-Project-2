@@ -15,6 +15,7 @@ int euclidean_mod(int a, unsigned int b);
 std::string getBinaryString(int num, int bits);
 int hammingDistance(std::string str1, std::string str2);
 int binarySearch(double array[], double target, int size);
+double OutputNN(std::list<idDistancePair>& PairList, std::list<idDistancePair>& PairListBF, int NUMBER_OF_NEIGHBOURS, double last_maf);
 void coutLineWithMessage(std::string m = "");
 void coutLineWithMessage(int, std::string m = "");
 void logFileLineWithMessage(std::string m = "");

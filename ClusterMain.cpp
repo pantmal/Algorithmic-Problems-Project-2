@@ -10,8 +10,6 @@
 #include <random>
 #include <climits>
 
-//#include "Neighbours.h"
-//#include "HyperCube.h"
 #include "VectorElement.h"
 #include "CurveElement.h"
 #include "Helpers.h"
@@ -241,6 +239,12 @@ int main(int argc, char *argv[])
         while (myfile)
         {
             getline(myfile, mystring);
+            string comma = ",";
+            if (mystring.find(comma) != std::string::npos)
+            {
+                // cout << "removing the commas" << endl;
+                replace(mystring.begin(), mystring.end(), ',', ' ');
+            }
             stringstream sso(mystring);
             sso >> temp;
             while (justOnce && sso >> tempString)
@@ -266,6 +270,12 @@ int main(int argc, char *argv[])
             while (myfile)
             {
                 getline(myfile, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
@@ -286,6 +296,12 @@ int main(int argc, char *argv[])
             while (myfile)
             {
                 getline(myfile, mystring);
+                string comma = ",";
+                if (mystring.find(comma) != std::string::npos)
+                {
+                    // cout << "removing the commas" << endl;
+                    replace(mystring.begin(), mystring.end(), ',', ' ');
+                }
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
@@ -589,6 +605,12 @@ int main(int argc, char *argv[])
     }
 
     //---DELETE MEMORY---
+
+    for (int k1 = 0; k1 < clusters; k1++){
+        if(kmeans_obj.ClusterArray[k1]->centroid_frechet->mark_deletion){
+            delete kmeans_obj.ClusterArray[k1]->centroid_frechet;
+        }
+    }
 
     if (updater == "vector"){
         for (int i = 0; i < how_many_rows; i++)
