@@ -171,7 +171,8 @@ int main(int argc, char *argv[])
     
     if (delta == -1.0) delta = 1; //PARAM <delta>
     
-    int w_arg = 700; //Hardcoded value for w
+    int w_arg = 400; //Hardcoded value for w (400 in LSH_L2, 400 in HC, 400 in LSH_DFD/CFD)
+
     bool justOnce = true;
     int how_many_columns = 0;
     int how_many_rows = 0;
@@ -468,7 +469,7 @@ int main(int argc, char *argv[])
             const sec duration_NN = clock::now() - before_NN;
 
             last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
-            
+
             tApproxSum += duration_NN.count();
             tTrueSum += duration_BF.count();
             
@@ -695,7 +696,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < how_many_rows; i++)
         {
 
-            double e = 3;
+            double e = 2.5;
             Input_Array_Frechet[i]->Filtering(e);
             cout<<"size" << Input_Array_Frechet[i]->filteredElementOneD.size() << endl;
             Input_Array_Frechet[i]->Snapping1d(t1,delta);
@@ -720,7 +721,7 @@ int main(int argc, char *argv[])
             myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
             myLogFile << "Algorithm: LSH_Frechet_Continuous " << endl;
 
-            double e = 3;
+            double e = 2.5;
             Query_Array_Frechet[i]->Filtering(e);
             cout<<"size" << Query_Array_Frechet[i]->filteredElementOneD.size() << endl;
 

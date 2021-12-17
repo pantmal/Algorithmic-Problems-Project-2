@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
     int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
     int N = 0; //N is unused. It is set to 0 because it is a HyperCube constructor argument.
-    int w = 100; //Hardcoded value for w.
+    int w = 400; //Hardcoded value for w.
 
     //KMeans object is constructed and its centroid are initialized.
     KMeans kmeans_obj(assigner, updater,clusters);
@@ -391,12 +391,12 @@ int main(int argc, char *argv[])
             vectorized_input_storage = new VectorElement *[how_many_rows*NUMBER_OF_HASH_TABLES];
             int vec_counter = 0;
 
+            uniform_int_distribution<> UM(100000, INT_MAX-1000000);
+            int M = UM(e);
+            cout << M << endl;
+
             for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
             {
-
-                uniform_int_distribution<> UM(100000, INT_MAX-1000000);
-                int M = UM(e);
-                cout << M << endl;
 
                 double open_d = delta - 1;
                 uniform_real_distribution<> U(0.0, open_d);
@@ -606,11 +606,14 @@ int main(int argc, char *argv[])
 
     //---DELETE MEMORY---
 
-    for (int k1 = 0; k1 < clusters; k1++){
-        if(kmeans_obj.ClusterArray[k1]->centroid_frechet->mark_deletion){
-            delete kmeans_obj.ClusterArray[k1]->centroid_frechet;
+    if (updater != "vector"){
+        for (int k1 = 0; k1 < clusters; k1++){
+            if(kmeans_obj.ClusterArray[k1]->centroid_frechet->mark_deletion){
+                delete kmeans_obj.ClusterArray[k1]->centroid_frechet;
+            }
         }
     }
+    
 
     if (updater == "vector"){
         for (int i = 0; i < how_many_rows; i++)

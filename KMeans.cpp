@@ -632,16 +632,16 @@ void KMeans::update_curve(){
 
     for (int k = 0; k < clusters; k++){
 
-        if(ClusterArray[k]->centroid_frechet->mark_deletion){
-            delete ClusterArray[k]->centroid_frechet;
-            ClusterArray[k]->centroid_frechet = NULL;
-        }
-       
         int list_size = ClusterArray[k]->frechet_elements.size();
         if (list_size == 0){
             continue;
         }
 
+        if(ClusterArray[k]->centroid_frechet->mark_deletion){
+            delete ClusterArray[k]->centroid_frechet;
+            ClusterArray[k]->centroid_frechet = NULL;
+        }
+       
         double log_res = log2(list_size);
         int height = ceil(log_res);
 
