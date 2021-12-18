@@ -14,31 +14,27 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
     assigned = false;
     mark_deletion = false;
 
-    QueryTrickid = new unsigned int[numberOfHashTables]; //gets set when the vector element gets into an LSH bucket
+    QueryTrickid = new unsigned int[numberOfHashTables]; //gets set when the curve element gets into an LSH bucket
     
-    //arrayElementTwoD.clear();
-    //arrayElementOneD.clear();
-
     id = "0";
     double temp;
     int counter = 0;
     distanceCurrQ = 0;
     
     size = dimensions;
-   // arrayVectorElement = new double[size];
     
     std::stringstream sso(fileLine);
     sso >> id; //Get the id
-    while (sso >> temp) //And the vector values in the array field
+    while (sso >> temp) //And the curve values in the array field
     {
         // arrayVectorElement[counter] = temp;
         if (variant == "discrete"){
             arrayElementTwoD.push_back({counter+1,temp});
-            gridElementTwoD.push_back({0,0.0});
+            gridElementTwoD.push_back({0,0.0}); //init values to prevent seg faults
         }else{
             arrayElementOneD.push_back(temp);
-            filteredElementOneD.push_back(0.0);
-            gridElementOneD.push_back({0.0});
+            filteredElementOneD.push_back(0.0); //init values to prevent seg faults
+            gridElementOneD.push_back({0.0}); //init values to prevent seg faults
         }
         counter++;
     }
@@ -46,6 +42,7 @@ CurveElement::CurveElement(int dimensions, std::string fileLine, int numberOfHas
 
 }
 
+//Overloaded constructor for Mean Curves
 CurveElement::CurveElement(std::vector<std::tuple <double, double, double, double > >& traversal){
 
     
@@ -66,6 +63,7 @@ CurveElement::CurveElement(std::vector<std::tuple <double, double, double, doubl
 
 }
 
+//Snapping for 2D curves
 void CurveElement::Snapping2d(double t1, double t2, double delta, int columns){
 
     gridElementTwoD.clear();
@@ -74,13 +72,14 @@ void CurveElement::Snapping2d(double t1, double t2, double delta, int columns){
     double prev_y = 0;
     for (int j = 0; j < columns; j++){
         
-        //x = floor((x-t)/d + 1/2) * d + t
         double x = get<0>( arrayElementTwoD[j]);
         double y = get<1>( arrayElementTwoD[j]);
         
-        double grid_x = (floor((abs(x-t1)/delta) + 0.5) * delta) + t1;
+        //apply snapping
+        double grid_x = (floor((abs(x-t1)/delta) + 0.5) * delta) + t1; 
         double grid_y = (floor((abs(y-t2)/delta) + 0.5) * delta) + t2;
         
+        //remove duplicates
         if (j != 0){
             if (prev_x != grid_x || prev_y != grid_y ){
                 
@@ -94,16 +93,15 @@ void CurveElement::Snapping2d(double t1, double t2, double delta, int columns){
         prev_x = grid_x;
         prev_y = grid_y;
         
-
     }
 
     //displayVectorElementGrid();
-
 }
 
+//Vectorizing a 2D curve for LSH
 string CurveElement::Vectorization2d(int columns, int M){
 
-
+    //Concatenation using a vector
     vector<double>  VectorizedCurve;
     int grid_size = gridElementTwoD.size();
     for (int v = 0; v < grid_size ;v++ ){
@@ -115,12 +113,13 @@ string CurveElement::Vectorization2d(int columns, int M){
         
     }
 
+    //Padding
     int size_before_pad = VectorizedCurve.size();
-    
     for (int pad_c = size_before_pad; pad_c < 2*columns; pad_c++){
         VectorizedCurve.push_back(M);
     }
     
+    //VectorElement contructor needs string argument so we need to convert the key to string format.
     std::stringstream sso;
     sso << this->id;
     sso << " ";
@@ -135,6 +134,7 @@ string CurveElement::Vectorization2d(int columns, int M){
 
 }
 
+//Filtering for 1D curves
 void CurveElement::Filtering(double e){
 
     
@@ -144,23 +144,24 @@ void CurveElement::Filtering(double e){
     auto it = v.begin();
     while (it != v.end()){
         
+        //Stop if vector bounds exceeded
         if (it >= v.end() || it+1 >= v.end() || it+2 >= v.end()){
             break;
         }
 
+        //Get three vals
         double a = *it;
         double b = *(it+1);
         double c = *(it+2);
 
-        // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
-
         double res1 = abs(a-b);
         double res2 = abs(b-c);
 
-        //it = it+3;
+        // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
+
+        //Either erase the item or increase the pointer/counter
         if (res1 <= e && res2 <= e){
             v.erase(it+1);
-            //it = it+1;
         }else{
             it = it+1;
         }
@@ -169,9 +170,9 @@ void CurveElement::Filtering(double e){
 
     filteredElementOneD = v;
 
-
 }
 
+//Snapping for 1D curves
 void CurveElement::Snapping1d(double t, double delta){
 
     gridElementOneD.clear();
@@ -180,12 +181,13 @@ void CurveElement::Snapping1d(double t, double delta){
     for (int j = 0; j < filt_size; j++ ){
 
         double y = filteredElementOneD[j];
-        double grid_y = floor(abs(y)+t/delta) * delta;
+        double grid_y = floor(abs(y)+t/delta) * delta; //apply snapping
 
         gridElementOneD.push_back(grid_y);
     }
 }
 
+//Getting Minima-Maxima of an 1D curve. Same logic as in filtering.
 void CurveElement::MinMax(){
 
     vector<double> v2 = gridElementOneD;
@@ -205,25 +207,22 @@ void CurveElement::MinMax(){
 
         // myLogFile << "a b c "<< a << " " << b << " "<< c << endl;
 
-        //it = it+3;
         if (min_val <= b && max_val >= b){
             v2.erase(it2+1);
-            //it = it+1;
         }else{
             it2 = it2+1;
         }
-
 
     }
     
     gridElementOneD = v2;
 
-
 }
 
+//Vectorizing an 1D curve for LSH
 string CurveElement::Vectorization1d(int columns, int M){
 
-
+    //Concatenation using a vector
     vector<double>  VectorizedCurve;
     int grid_size = gridElementOneD.size();
     for (int v = 0; v < grid_size ;v++ ){
@@ -232,11 +231,13 @@ string CurveElement::Vectorization1d(int columns, int M){
         VectorizedCurve.push_back(y);
     }
 
+    //Padding
     int size_before_pad = VectorizedCurve.size();
     for (int pad_c = size_before_pad; pad_c < columns; pad_c++){
         VectorizedCurve.push_back(M);
     }
     
+    //VectorElement contructor needs string argument so we need to convert the key to string format.
     std::stringstream sso;
     sso << this->id;
     sso << " ";
@@ -251,13 +252,7 @@ string CurveElement::Vectorization1d(int columns, int M){
 
 }
 
-//Debug method
-void CurveElement::displayId()
-{
-    // myLogFile << "id is: " << id << std::endl;
-}
-
-//Displaying each column/value of the vector
+//Displaying each value of the curve
 void CurveElement::displayVectorElementArray2D()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;
@@ -266,7 +261,12 @@ void CurveElement::displayVectorElementArray2D()
 
 }
 
-//Displaying each column/value of the vector
+//The rest are debug methods
+void CurveElement::displayId()
+{
+    // myLogFile << "id is: " << id << std::endl;
+}
+
 void CurveElement::displayVectorElementArray()
 {
     // myLogFile << "---ELEMENT ARRAY---" << std::endl;
@@ -284,15 +284,11 @@ void CurveElement::displayVectorElementGrid()
     //myLogFile << "size " << arrayElementTwoD.size() << endl;
 }
 
-
-
-//Debug method
 void CurveElement::displayDistanceCurrQ()
 {
     cout << distanceCurrQ << endl;
 }
 
-//Debug method
 void CurveElement::setDistanceRandom()
 {
     unsigned long x;
@@ -303,7 +299,6 @@ void CurveElement::setDistanceRandom()
     distanceCurrQ = x + 1;
 }
 
-//Getting the L2 distance with the q/argument specified and setting it to the field.
 void CurveElement::getL2Distance(CurveElement *q)
 {
     double temp;
@@ -323,7 +318,6 @@ void CurveElement::getL2Distance(CurveElement *q)
 CurveElement::~CurveElement()
 {
 
-   // delete[] arrayVectorElement;
     if (!mark_deletion){
         delete[] QueryTrickid;
     }

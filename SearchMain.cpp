@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
             tempd = argv[i + 1];
             delta = args_string_to_double(tempd);
         }
-        else if (strcmp(argv[i], "-bf_filter") == 0)
+        else if (strcmp(argv[i], "-bf_filter") == 0) //extra param
         {
             bf_filter = true;
         }
@@ -171,8 +171,7 @@ int main(int argc, char *argv[])
     
     if (delta == -1.0) delta = 1; //PARAM <delta>
     
-    int w_arg = 400; //Hardcoded value for w (400 in LSH_L2, 400 in HC, 400 in LSH_DFD/CFD)
-
+    int w_arg = 400; //Hardcoded value for w
     bool justOnce = true;
     int how_many_columns = 0;
     int how_many_rows = 0;
@@ -218,7 +217,7 @@ int main(int argc, char *argv[])
             sso >> temp;
             while (justOnce && sso >> tempString)
             {
-                how_many_columns++; //calculate the number of columns (dimension of the vector without the id)
+                how_many_columns++; //calculate the number of columns (dimension of the vector/curve without the id)
             }
             justOnce = false;
         }
@@ -231,8 +230,8 @@ int main(int argc, char *argv[])
     myfile.close();
     myfile.clear();
 
-    cout << "columns==== " << how_many_columns << endl;
-    cout << "rows==== " << how_many_rows << endl;
+    //cout << "columns==== " << how_many_columns << endl;
+    //cout << "rows==== " << how_many_rows << endl;
     //--------DATA COLLECTED----------
 
     //Save the query items.
@@ -240,10 +239,11 @@ int main(int argc, char *argv[])
     myfilequery.open(FILE_NAME_QUERY);
     query_rows = count(istreambuf_iterator<char>(myfilequery), istreambuf_iterator<char>(), '\n');
     //how_many_rows++;
-    cout << "Query rows are: " << query_rows << endl;
+    //cout << "Query rows are: " << query_rows << endl;
     myfilequery.close();
     myfilequery.clear();
-        
+
+    //Now set up the arrays depending on the algorithm    
     if (algorithm == "LSH" || algorithm == "Hypercube"){
         
         //And now initialize the VectorElement objects.
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 
     }else if (algorithm == "Frechet"){
         
-        //And now initialize the VectorElement objects.
+        //And now initialize the CurveElement objects.
         myfile.open(FILE_NAME_INPUT);
         Input_Array_Frechet = new CurveElement *[how_many_rows];
         int i = 0;
@@ -326,9 +326,9 @@ int main(int argc, char *argv[])
                 stringstream sso(mystring);
                 if (i < how_many_rows)
                 {
-                    if (metric == "discrete"){
+                    if (metric == "discrete"){ //discrete frechet
                         Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"discrete");
-                    }else{
+                    }else{ //continuous frechet
                         Input_Array_Frechet[i] = new CurveElement(how_many_columns, mystring, NUMBER_OF_HASH_TABLES,"continuous");
                     }
                     
@@ -394,6 +394,7 @@ int main(int argc, char *argv[])
         r_array[i] = r_val;
     }
 
+    //Declaring some other stuff
     LSHash **Hash_Array;
 
     double tTrueSum = 0.0;
@@ -401,6 +402,8 @@ int main(int argc, char *argv[])
     double last_maf = -1.0;
 
     if (algorithm == "LSH"){
+
+        myLogFile << "Algorithm: LSH_Vector " << endl <<endl;
         
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
@@ -424,8 +427,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array[i]->id << endl;
-            myLogFile << "Algorithm: LSH_Vector " << endl;
-
+            
             //First get the actual N neighbors with brute force check
             std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
 
@@ -468,6 +470,7 @@ int main(int argc, char *argv[])
             PairList.erase(last, PairList.end());
             const sec duration_NN = clock::now() - before_NN;
 
+            //Getting output and maf. Same in all algorithms
             last_maf = OutputNN(PairList,PairListBF,NUMBER_OF_NEIGHBOURS,last_maf);
 
             tApproxSum += duration_NN.count();
@@ -480,6 +483,8 @@ int main(int argc, char *argv[])
 
 
     }else if (algorithm == "Hypercube"){
+
+        myLogFile << "Algorithm: Hypercube " << endl<<endl;
     
         //Initialize cube object and insert items
         HyperCube Cube_Obj(k_input, how_many_columns, w_arg, NUMBER_OF_NEIGHBOURS, M, probes, RANGE);
@@ -495,8 +500,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array[i]->id << endl;
-            myLogFile << "Algorithm: Hypercube " << endl;
-
+            
             //First get the actual N neighbors with brute force check
             list<idDistancePair> PairListBF;
             std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
@@ -546,13 +550,17 @@ int main(int argc, char *argv[])
 
     
     }else if (algorithm == "Frechet" && metric == "discrete"){
+
+        myLogFile << "Algorithm: LSH_Frechet_Discrete " << endl<<endl;
  
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
 
+        //Padding M
         uniform_int_distribution<> UM(100000, INT_MAX-1000000);
         int M = UM(e);
-        cout << M << endl;
+        //cout << M << endl;
 
+        //Storage for vectorized curves. Used only for their deletion.
         vectorized_input_storage = new VectorElement * [NUMBER_OF_HASH_TABLES*how_many_rows];
         int vec_counter = 0;
        
@@ -564,6 +572,7 @@ int main(int argc, char *argv[])
             unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
             default_random_engine e(seed);
             
+            //Getting t values
             double open_d = delta - 1;
             uniform_real_distribution<> U(0.0, open_d);
             double t1 = U(e);
@@ -571,21 +580,26 @@ int main(int argc, char *argv[])
             Hash_Array[l]->t1 = t1;
             Hash_Array[l]->t2 = t2;
 
+            //Inserting input curves into LSH
             for (int i = 0; i < how_many_rows; i++)
             {
 
+                //Grid and concat
                 Input_Array_Frechet[i]->Snapping2d(t1,t2,delta,how_many_columns);
                 string str_curve = Input_Array_Frechet[i]->Vectorization2d(how_many_columns,M);
 
+                //Getting curve as vector
                 VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, NUMBER_OF_HASH_TABLES);
                 vec2add->original_curve = Input_Array_Frechet[i];
                 
+                //Insert the key
                 Hash_Array[l]->insertItem(vec2add, r_array);
                 
-                //TODO: ALSO refactor
+                //Store the curve
                 vectorized_input_storage[vec_counter] = vec2add;
                 vec_counter++;
                 
+                //Clear for next hash table
                 Input_Array_Frechet[i]->gridElementTwoD.clear();    
                 //myLogFile << "END OF ARR" << endl;
             }
@@ -602,7 +616,6 @@ int main(int argc, char *argv[])
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
-            myLogFile << "Algorithm: LSH_Frechet_Discrete " << endl;
 
             //First get the actual N neighbors with brute force check
             std::chrono::steady_clock::time_point begin_bf = std::chrono::steady_clock::now();
@@ -615,7 +628,7 @@ int main(int argc, char *argv[])
             for (int l = 0; l < how_many_rows; l++)
             {
 
-                //double dfd = 0.0; //skipping true calculations
+                //double dfd = 0.0; //skipping true calculations if need be
                 double dfd = ret_DFD(how_many_columns,how_many_columns, Input_Array_Frechet[l]->arrayElementTwoD,Query_Array_Frechet[i]->arrayElementTwoD);
 
                 idDistancePair *Pair = new idDistancePair(Input_Array_Frechet[l]->id, dfd);
@@ -625,12 +638,12 @@ int main(int argc, char *argv[])
             PairListBF.sort(cmpListPair);
             const sec duration_BF = clock::now() - before_BF;
 
-
             //Now find the approx N neighbors with LSH
             const auto before_NN = clock::now();
             for (int j = 0; j < NUMBER_OF_HASH_TABLES; j++)
             {
 
+                //Same logic as for input curves
                 double t1 = Hash_Array[j]->t1;
                 double t2 = Hash_Array[j]->t2;
                 Query_Array_Frechet[i]->Snapping2d(t1,t2,delta,how_many_columns);
@@ -644,14 +657,13 @@ int main(int argc, char *argv[])
                 vectorized_query_storage[query_counter] = vec2add;
                 query_counter++;
 
+                //Add a idDistancePair object for every neighbor.
                 for (int k = 0; k < NUMBER_OF_NEIGHBOURS; k++)
-                { //Add a idDistancePair object for every neighbor.
-
+                { 
                     //cout << "id " << Hash_Array[j]->neighboursInfoTable[i]->arrayId[k] << " dis " << Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k] << endl;
                     idDistancePair *Pair = new idDistancePair(Hash_Array[j]->neighboursInfoTable[i]->arrayId[k], Hash_Array[j]->neighboursInfoTable[i]->arrayDistance[k]);
                     if (Pair->getDistance() <= -1 )//|| Pair->getDistance() == 0 || Pair->getId() == " ")
                     {
-                    //    cout<< "? "<< endl;
                         delete Pair;
                         break;
                     }
@@ -659,7 +671,6 @@ int main(int argc, char *argv[])
                     delete Pair;
                 }
 
-                //delete vec2add;
             }
             PairList.sort(cmpListPair);                                //sort the list to get nearest values first.
             auto last = std::unique(PairList.begin(), PairList.end()); //and remove duplicate values because we may get them from the various hash tables.
@@ -676,16 +687,20 @@ int main(int argc, char *argv[])
 
         }
     
-    }else{
+    }else{ //Continuous Frechet
+
+        myLogFile << "Algorithm: LSH_Frechet_Continuous " << endl<<endl;
 
         int NUMBER_OF_BUCKETS = how_many_rows / 8;
         LSHash Hash_Obj(NUMBER_OF_BUCKETS, how_many_columns, k_input, w_arg);
         Hash_Obj.initNeighboursInfo(query_rows, NUMBER_OF_NEIGHBOURS);
 
+        //Padding M
         uniform_int_distribution<> UM(100000, INT_MAX-1000000);
         int M = UM(e);
-        cout << M << endl;
+        //cout << M << endl;
 
+        //t for shifting
         double open_d = delta - 1; 
         uniform_real_distribution<> U(0.0, open_d);
         double t1 = U(e);
@@ -696,17 +711,21 @@ int main(int argc, char *argv[])
         for (int i = 0; i < how_many_rows; i++)
         {
 
+            //Filtering
             double e = 2.5;
             Input_Array_Frechet[i]->Filtering(e);
-            cout<<"size" << Input_Array_Frechet[i]->filteredElementOneD.size() << endl;
+            //cout<<"size" << Input_Array_Frechet[i]->filteredElementOneD.size() << endl;
+            
+            //Transform to vector
             Input_Array_Frechet[i]->Snapping1d(t1,delta);
             Input_Array_Frechet[i]->MinMax();
             string str_curve = Input_Array_Frechet[i]->Vectorization1d(how_many_columns, M);
             
+            //VectorElement for LSH
             VectorElement* vec2add = new VectorElement(how_many_columns, str_curve, NUMBER_OF_HASH_TABLES);
             vec2add->original_curve = Input_Array_Frechet[i];
             
-            Hash_Obj.insertItem(vec2add, r_array); //do some checks
+            Hash_Obj.insertItem(vec2add, r_array);
 
             vectorized_input_storage[i] = vec2add;
             //myLogFile << "END OF ARR" << endl;
@@ -714,16 +733,15 @@ int main(int argc, char *argv[])
 
         vectorized_query_storage = new VectorElement * [query_rows];
 
-        //And now for each query...
+        //And now for each query... (similar logic)
         list<idDistancePair> PairList;
         for (int i = 0; i < query_rows; i++)
         {
             myLogFile << "Query: " << Query_Array_Frechet[i]->id << endl;
-            myLogFile << "Algorithm: LSH_Frechet_Continuous " << endl;
-
+            
             double e = 2.5;
             Query_Array_Frechet[i]->Filtering(e);
-            cout<<"size" << Query_Array_Frechet[i]->filteredElementOneD.size() << endl;
+            //cout<<"size" << Query_Array_Frechet[i]->filteredElementOneD.size() << endl;
 
             //First get the actual N neighbors with brute force check
             list<idDistancePair> PairListBF;
@@ -745,9 +763,8 @@ int main(int argc, char *argv[])
             PairListBF.sort(cmpListPair);
             const sec duration_BF = clock::now() - before_BF;
 
-            //Now find the approx N neighbors with Hypercube
+            //Now find the approx N neighbors
             const auto before_NN = clock::now();
-
             //double t1 = Hash_Obj.t1;
             Query_Array_Frechet[i]->Snapping1d(t1,delta);
             Query_Array_Frechet[i]->MinMax();
@@ -784,9 +801,12 @@ int main(int argc, char *argv[])
 
     }
 
+    //Approx times
     myLogFile << "tApproximateAverage = " << tApproxSum/query_rows << "[s]" << endl;
     myLogFile << "tTrueAverage = " << tTrueSum/query_rows << "[s]" << endl;
+    myLogFile << endl;
     
+    //MAF
     if (last_maf != -1.0){
         myLogFile << "MAF = " << last_maf << endl;
     }else{
@@ -867,7 +887,6 @@ int main(int argc, char *argv[])
 
     myLogFile.close();
     cout << "Program has successfully completed and written its results to the output file." << endl;
-
     
     return 0;
 }

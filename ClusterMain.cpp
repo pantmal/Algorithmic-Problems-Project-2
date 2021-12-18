@@ -31,11 +31,11 @@ int main(int argc, char *argv[])
     int M = -1;                     //max_number_M_of_hypercube
     int probes = -1;                //number of probes
     int NUMBER_OF_HASH_TABLES = -1; //number_of_vector_hash_tables
-    double delta = -1.0;
-    bool complete = false;
-    bool silhouette_param = false;
-    string assigner = "Classic"; //method. Will use Classic for assignment if none provided.
-    string updater = "vector";
+    double delta = -1.0;            //delta for frechet
+    bool complete = false;          //complete clusters, optional
+    bool silhouette_param = false;  //silhouette results, optional
+    string assigner = "Classic"; //assignment method. Will use Classic if none provided.
+    string updater = "vector"; //update step. Will use vector if none provided.
 
     for (int i = 1; i < argc; i++){
 
@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    //Rejecting incompatible combos
     if (updater == "vector" && assigner == "LSH_Frechet"){
         cout << "Mean Vector update step is incompatible with LSH_Frechet assignment step. Choose a new combination." << endl;
         exit(0);
@@ -205,15 +206,15 @@ int main(int argc, char *argv[])
     
     if (NUMBER_OF_HASH_TABLES == -1) NUMBER_OF_HASH_TABLES = 3; //PARAM <L>
     
-    if (k_input == -1) k_input = 4; //PARAM <N>
+    if (k_input == -1) k_input = 4; //PARAM <k in LSH>
     
     if (M == -1) M = 10 ; //PARAM <radius>
     
-    if (kdim == -1) kdim = 3; //PARAM 
+    if (kdim == -1) kdim = 3; //PARAM <cube dims>
     
-    if (probes == -1) probes = 2; //PARAM 
+    if (probes == -1) probes = 2; //PARAM  <probes>
     
-    if (delta == -1.0) delta = 1; //PARAM <N>
+    if (delta == -1.0) delta = 1; //PARAM <d>
     
     bool justOnce = true;
     int how_many_columns = 0;
@@ -249,7 +250,7 @@ int main(int argc, char *argv[])
             sso >> temp;
             while (justOnce && sso >> tempString)
             {
-                how_many_columns++; //calculate the number of columns (dimension of the vector without the id)
+                how_many_columns++; //calculate the number of columns (dimension of the vector/curve without the id)
             }
             justOnce = false;
         }
@@ -257,7 +258,7 @@ int main(int argc, char *argv[])
     myfile.close();
     myfile.clear();
 
-    //And now initialize the VectorElement objects.
+    //And now initialize the objects.
     VectorElement **Input_Array;
     CurveElement **Input_Array_Frechet;
 
@@ -393,11 +394,11 @@ int main(int argc, char *argv[])
 
             uniform_int_distribution<> UM(100000, INT_MAX-1000000);
             int M = UM(e);
-            cout << M << endl;
+            //cout << M << endl;
 
             for (int i = 0; i < NUMBER_OF_HASH_TABLES; i++)
             {
-
+                //Getting t values
                 double open_d = delta - 1;
                 uniform_real_distribution<> U(0.0, open_d);
                 double t1 = U(e);
@@ -407,18 +408,22 @@ int main(int argc, char *argv[])
 
                 for (int j = 0; j < how_many_rows; j++)
                 {
-
+                    //Grid and concat
                     Input_Array_Frechet[j]->Snapping2d(t1,t2,delta,how_many_columns);
                     string str_curve = Input_Array_Frechet[j]->Vectorization2d(how_many_columns,M);
 
+                    //Getting curve as vector
                     VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, NUMBER_OF_HASH_TABLES);
                     vec2add->original_curve = Input_Array_Frechet[j];
                     
+                    //insert the key
                     kmeans_obj.KMeans_Hash_Array[i]->insertItem(vec2add, r_array);
                     
+                    //store the vec for deletion
                     vectorized_input_storage[vec_counter] = vec2add;
                     vec_counter++;
 
+                    //clear for next hash table
                     Input_Array_Frechet[j]->gridElementTwoD.clear();
                     //myLogFile << "END OF ARR" << endl;
                 }
@@ -459,10 +464,6 @@ int main(int argc, char *argv[])
         if (kmeans_obj.updater == "vector"){
             kmeans_obj.update_vec(how_many_columns);
         }else{
-            for (int k1 = 0; k1 < clusters; k1++){
-                int list_size = kmeans_obj.ClusterArray[k1]->frechet_elements.size();
-                cout << "here size" << list_size  << endl;
-            }
             kmeans_obj.update_curve();
         }
         
@@ -525,6 +526,8 @@ int main(int argc, char *argv[])
         myLogFile << "Update: Mean Frechet " << endl;
     }
 
+    myLogFile << endl;
+
     for (int k1 = 0; k1 < clusters; k1++){
 
         myLogFile << "CLUSTER-" << (k1 + 1) << " {";
@@ -532,17 +535,20 @@ int main(int argc, char *argv[])
             int size = kmeans_obj.ClusterArray[k1]->cluster_elements.size();
             myLogFile << "size: " << size << ", centroid: [";
             kmeans_obj.ClusterArray[k1]->centroid->displayVectorElementArray();
-            myLogFile << "]" << endl;   
+            myLogFile << "]" << endl;
+            myLogFile << endl;   
         }else{
             int size = kmeans_obj.ClusterArray[k1]->frechet_elements.size();
             myLogFile << "size: " << size << ", centroid: [";
             kmeans_obj.ClusterArray[k1]->centroid_frechet->displayVectorElementArray2D();
             myLogFile << "]" << endl;   
+            myLogFile << endl;
         }
 
         
     }
     myLogFile << "clustering_time: " << duration.count() << "[s]" << endl;
+    myLogFile << endl;
 
     //Getting silhouette scores for every cluster and a total one.
     if (silhouette_param){
@@ -567,6 +573,7 @@ int main(int argc, char *argv[])
             myLogFile << "s" << (k1 + 1) << ": " << get_sil << ", ";
         }
         myLogFile << "stotal: " << silhouette_total << "]" << endl;
+        myLogFile << endl;
     }
     
 
@@ -586,6 +593,7 @@ int main(int argc, char *argv[])
                     myLogFile << vobg->id << ", ";
                 }
                 myLogFile << "}" << endl;
+                myLogFile << endl;
             }else{
                 myLogFile << "CLUSTER-" << (k1 + 1) << " { centroid: [";
                 kmeans_obj.ClusterArray[k1]->centroid_frechet->displayVectorElementArray2D();
@@ -598,6 +606,7 @@ int main(int argc, char *argv[])
                     myLogFile << vobg->id << ", ";
                 }
                 myLogFile << "}" << endl;
+                myLogFile << endl;
             }
 
             

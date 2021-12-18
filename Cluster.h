@@ -13,7 +13,7 @@
 
 using namespace std;
 
-//Cluster class which keeps the centroid vector and a list with its elements.
+//Cluster class which keeps the centroid vector/curve and a list with its elements.
 class Cluster
 {
 

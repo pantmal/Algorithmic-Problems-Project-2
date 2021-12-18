@@ -134,7 +134,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
   list<VectorElement *>::iterator hitr2;
 
 
-  if (algorithm == "LSH"){
+  if (algorithm == "LSH"){ //LSH for vectors
     //Get the L2 distance of all elements in the bucket with the given query and sort the list based on the distance.
     for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
     {
@@ -146,9 +146,11 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
 
       vobj->getL2Distance(q);
     }
-    table[index].sort(cmp);
 
-  }else{
+    //Sort to get the closest vals
+    table[index].sort(cmp); 
+
+  }else{ //LSH for Curves
 
     for (hitr1 = table[index].begin(); hitr1 != table[index].end(); ++hitr1)
     {
@@ -156,15 +158,17 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
       vobj->currentDFD = 0.0;
       vobj->currentCFD = 0.0;
 
+      //Getting the original curves stored in the VectorElement objs
       CurveElement* input_curve = vobj->original_curve;
       CurveElement* query_curve = q->original_curve;
 
-      if (algorithm == "Frechet"){
-        int d = input_curve->arrayElementTwoD.size();
+      if (algorithm == "Frechet"){ //2D curves
+        
         //double dfd = 0.0;
+        int d = input_curve->arrayElementTwoD.size();
         double dfd = ret_DFD(d,d, input_curve->arrayElementTwoD,query_curve->arrayElementTwoD);
         vobj->currentDFD = dfd;
-      }else{
+      }else{ //1D curves
         
         //double cfd = 0.0;
         double cfd = ret_CFD(input_curve,query_curve,true);
@@ -173,16 +177,15 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
       
     }
 
-    if (algorithm == "Frechet"){
+    //Sort to get the closest vals
+    if (algorithm == "Frechet"){ 
       table[index].sort(cmpDFD);
     }else{
       table[index].sort(cmpCFD);
     }
     
-
   }
 
-  
 
   //Now start collecting neighbors in the neighboursInfoTable and increment the counter
   int Ni = 0;
@@ -193,6 +196,7 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
 
     VectorElement *vobj = *hitr2;
     
+    //Setting distance based on the algorithm
     if(algorithm == "LSH"){
       neighboursInfoTable[j]->arrayDistance[Ni] = vobj->distanceCurrQ;
     }else{
@@ -207,6 +211,8 @@ void LSHash::calculateDistanceAndFindN(VectorElement *q, int *r_array, int j, in
     neighboursInfoTable[j]->arrayId[Ni] = vobj->id;
     Ni++;
   }
+
+
 }
 
 //Similar searching for Range
@@ -229,9 +235,12 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
   {
     VectorElement *vobj = *hitr1;
     
-    if (algorithm == "LSH"){
+    if (algorithm == "LSH"){ //LSH for vectors
+      
       vobj->getL2Distance(q);
-    }else{
+
+    }else{ //LSH for curves
+      
       vobj->currentDFD = 0.0;
       CurveElement* input_curve = vobj->original_curve;
       CurveElement* query_curve = q->original_curve;  
@@ -245,6 +254,7 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
     
   }
 
+  //Sort to get the closest vals
   if (algorithm == "LSH"){
     table[index].sort(cmp);
   }else{
@@ -252,12 +262,11 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
   }
 
 
-
   for (hitr2 = table[index].begin(); hitr2 != table[index].end(); ++hitr2)
   {
 
     VectorElement *vobj = *hitr2;
-    if (algorithm == "LSH"){
+    if (algorithm == "LSH"){ //LSH for vectors
       
       if (vobj->distanceCurrQ <= range)
       {
@@ -274,7 +283,7 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
 
       }
 
-    }else{
+    }else{ //LSH for curves
       
       if (vobj->currentDFD <= range)
       {
@@ -286,7 +295,7 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
         range_list_frechet.push_back(input_curve);
 
         if (cluster_mode == true)
-        { //Used in clustering Reverse assignment only
+        { 
           input_curve->assigned = true;
           input_curve->assigned_clusters.push_back(current_cluster);
           assigned_total++;
@@ -298,6 +307,8 @@ void LSHash::RangeSearch(VectorElement *q, int *r_array, int j, double range, st
     }
 
   }
+
+  
 }
 
 //Inserting item using the g func

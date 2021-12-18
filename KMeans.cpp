@@ -142,6 +142,7 @@ void KMeans::initialization(int input_size, VectorElement** Input_Array){
 
 }
 
+//Overloaded for Curves. Same logic
 void KMeans::initialization(int input_size, CurveElement** Input_Array_Frechet){
 
     int t_counter = 0;
@@ -282,7 +283,7 @@ void KMeans::ClassicAssignment(VectorElement** Input_Array, int how_many_rows){
 
 }
 
-
+//Overloaded for Curves. Same logic
 void KMeans::ClassicAssignment(CurveElement** Input_Array_Frechet, int how_many_rows){
 
     for (int i = 0; i < how_many_rows; i++){
@@ -439,6 +440,7 @@ void KMeans::ReverseAssignment(VectorElement** Input_Array, int how_many_rows){
     
 }
 
+//Overloaded for Curves. Similar logic
 void KMeans::ReverseAssignment(CurveElement** Input_Array, int how_many_rows, int how_many_columns, double delta, int M){
 
 
@@ -482,16 +484,18 @@ void KMeans::ReverseAssignment(CurveElement** Input_Array, int how_many_rows, in
 
                 this->KMeans_Hash_Array[j]->current_cluster = ClusterArray[k]->id;
 
+                //Transforming the Curve to Vector
                 double t1 = this->KMeans_Hash_Array[j]->t1;
                 double t2 = this->KMeans_Hash_Array[j]->t2;
                 ClusterArray[k]->centroid_frechet->Snapping2d(t1,t2,delta,how_many_columns);
                 string str_curve = ClusterArray[k]->centroid_frechet->Vectorization2d(how_many_columns,M);
-                
                 VectorElement* vec2add = new VectorElement(how_many_columns*2, str_curve, hashes);
                 vec2add->original_curve = ClusterArray[k]->centroid_frechet;
 
+                //Do range search for LSH_Frechet
                 this->KMeans_Hash_Array[j]->RangeSearch(vec2add, this->r_array, 0, min_dist * power, "LSH_Frechet");
-                delete vec2add;                
+
+                delete vec2add; //clearup
             }
             ClusterArray[k]->frechet_elements = this->KMeans_Hash_Array[hashes-1]->range_list_frechet;
             
@@ -623,28 +627,31 @@ void KMeans::update_vec(int columns){
 
 }
 
+//Mean frechet step
 void KMeans::update_curve(){
 
     
     unsigned seed = chrono::steady_clock::now().time_since_epoch().count();
     default_random_engine e(seed);
 
-
+    //For each cluster
     for (int k = 0; k < clusters; k++){
 
+        //Skip empty clusters
         int list_size = ClusterArray[k]->frechet_elements.size();
         if (list_size == 0){
             continue;
         }
 
+        //Delete previous centroid
         if(ClusterArray[k]->centroid_frechet->mark_deletion){
             delete ClusterArray[k]->centroid_frechet;
             ClusterArray[k]->centroid_frechet = NULL;
         }
        
+        //Set up tree size
         double log_res = log2(list_size);
         int height = ceil(log_res);
-
         int tree_size = pow(2,height+1) - 1;
         int max_leaves = pow(2,height);
         
@@ -652,18 +659,19 @@ void KMeans::update_curve(){
             int removed_nodes = max_leaves - list_size;
             tree_size = tree_size - removed_nodes;
         }
-
         //cout << "here " << list_size <<" " << height << " " << tree_size << endl;
+
+        //Build the binary tree
         TreeNode* MeanCurveTree = MeanCurveTree->AddNode(MeanCurveTree,0,tree_size);
         
+        //Now randomly scatter the curves at leaves
         list<CurveElement *> cluster_copy = ClusterArray[k]->frechet_elements;
-
         while(!cluster_copy.empty()){
-            //cout << "ll size " << ll.size() << endl;
+            
             uniform_int_distribution<> U(0, cluster_copy.size() - 1);
             int random_element = U(e);
             
-            //Find the item in the list and remove it. We only check each probe once.
+            //Find the item in the list and remove it.
             list<CurveElement* >::iterator it = cluster_copy.begin();
             advance(it, random_element);
             CurveElement* item = *it;
@@ -672,15 +680,15 @@ void KMeans::update_curve(){
             MeanCurveTree->AddCurve(MeanCurveTree,item); 
         }
 
-        //cout << "here f" << endl;
-
+        //Do the post order traversal and get final curve from root
         CurveElement* final_mean = MeanCurveTree->MeanCurveTraversal(MeanCurveTree);
         //final_mean->displayVectorElementGrid();
         //myLogFile << "size f" << final_mean->arrayElementTwoD.size() << endl;
-        //cout << "here f" << endl;
         
+        //Set new centroid
         ClusterArray[k]->centroid_frechet = final_mean;
 
+        //clearup
         MeanCurveTree->DeleteNode(MeanCurveTree->left);
         MeanCurveTree->DeleteNode(MeanCurveTree->right);
     }
@@ -767,6 +775,7 @@ double KMeans::silhouette(int rows){
     return silhouette_total;
 }
 
+//'Overloaded' for Curves. Same logic.
 double KMeans::silhouette_frechet(int rows){
     
     

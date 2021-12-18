@@ -13,7 +13,7 @@
 #include "HyperCube.h"
 #include "LSHash.h"
 
-//KMeans clss
+//KMeans class
 class KMeans{
 
     public:

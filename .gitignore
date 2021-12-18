@@ -1,6 +1,2 @@
-*.txt
 *.csv
-*.conf
-*.xml
-unit_tests/
 .vs_code/

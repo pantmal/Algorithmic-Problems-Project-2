@@ -6,6 +6,7 @@
 #include "CurveElement.h"
 #include "DiscreteFrechet.h"
 
+//Constructor
 TreeNode::TreeNode(){
 
 
@@ -122,28 +123,25 @@ CurveElement* TreeNode::MeanCurveTraversal(TreeNode* current){
 
 }
 
-
+//Destructor
 void TreeNode::DeleteNode(TreeNode* current)
 {
     if (current == NULL) return;
 
-    //std::cout << " del curve" << std::endl;
-
-    
-    /* first delete both subtrees */
+    //delete both subtrees 
     DeleteNode(current->left);
     DeleteNode(current->right);
      
-    /* then delete the node */
     //cout << "\n Deleting node: " << node->data;
 
+    //Deleting curve object
     if(current->Curve_Object != NULL){
+        // std::cout << " del curve" << std::endl;
         if (current->Curve_Object->mark_deletion){
           delete current->Curve_Object;  
         }
-        // std::cout << " del curve" << std::endl;
-       //  delete current->Curve_Object;
     } 
 
+    //delete curr node
     delete current;
 }

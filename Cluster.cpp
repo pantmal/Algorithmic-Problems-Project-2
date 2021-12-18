@@ -18,6 +18,7 @@ Cluster::Cluster(VectorElement* centroid_arg, int id_arg){
 
 }
 
+//Overloaded for curves
 Cluster::Cluster(CurveElement* centroid_arg, int id_arg){
 
 

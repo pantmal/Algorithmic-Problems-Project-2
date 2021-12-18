@@ -7,12 +7,11 @@
 
 #include "CurveElement.h"
 
-
+//TreeNode class
 class TreeNode
 {
 
 public:
-    //int data;
     
     CurveElement* Curve_Object;
     TreeNode* left; 

@@ -1,0 +1,66 @@
+Algorithm: LSH_Frechet_Continuous 
+
+Query: aer
+Approximate Nearest neighbor-1: adm
+True Nearest neighbor-1: abt
+distanceApproximate: 11.74
+distanceTrue: 9.67
+
+Query: aeri
+Approximate Nearest neighbor-1: adm
+True Nearest neighbor-1: adc
+distanceApproximate: 11.74
+distanceTrue: 15.1848
+
+Query: aes
+Approximate Nearest neighbor-1: acsf
+True Nearest neighbor-1: acsf
+distanceApproximate: 2.8145
+distanceTrue: 2.8145
+
+Query: aet
+Approximate Nearest neighbor-1: acsf
+True Nearest neighbor-1: aapl
+distanceApproximate: 2.8145
+distanceTrue: 17.75
+
+Query: aeti
+Approximate Nearest neighbor-1: acst
+True Nearest neighbor-1: acst
+distanceApproximate: 1.261
+distanceTrue: 1.261
+
+Query: aey
+Approximate Nearest neighbor-1: acst
+True Nearest neighbor-1: aau
+distanceApproximate: 1.261
+distanceTrue: 1.57
+
+Query: aezs
+Approximate Nearest neighbor-1: acst
+True Nearest neighbor-1: acer
+distanceApproximate: 1.261
+distanceTrue: 16.0946
+
+Query: afam
+Approximate Nearest neighbor-1: acst
+True Nearest neighbor-1: aem
+distanceApproximate: 1.261
+distanceTrue: 7.933
+
+Query: afb
+Approximate Nearest neighbor-1: acst
+True Nearest neighbor-1: abe
+distanceApproximate: 1.261
+distanceTrue: 1.63
+
+Query: afc
+Approximate Nearest neighbor-1: abrn
+True Nearest neighbor-1: abrn
+distanceApproximate: 0.327
+distanceTrue: 0.327
+
+tApproximateAverage = 0.130272[s]
+tTrueAverage = 1.51382[s]
+
+MAF = 1.21406

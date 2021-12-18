@@ -49,7 +49,6 @@ void VectorElement::displayVectorElementArray()
 }
 
 
-
 //Debug method
 void VectorElement::displayDistanceCurrQ()
 {

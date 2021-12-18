@@ -20,7 +20,7 @@
 using namespace CppUnit;
 using namespace std;
 
-
+//Defining the Suite
 class Suite : public CppUnit::TestFixture {
     
     CPPUNIT_TEST_SUITE(Suite);
@@ -44,21 +44,20 @@ public:
     
 };
 
-
+//Testing the checkItem method of TableF. Reminder: returns the bucket of the item found or -1 if not found.
 void Suite::testCheckTableF(void){
-
 
     int position_zero = TableOfValuesF->checkItem(2);
     int position_one = TableOfValuesF->checkItem(14);
     int position_minus = TableOfValuesF->checkItem(33);
 
-    
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning bucket #0", position_zero, 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning bucket #1", position_one, 1);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning -1 for non-existing item", position_minus, -1);
     
 }
 
+//Testing hamming distance
 void Suite::testCheckHammingDist(void)
 {
 
@@ -66,13 +65,13 @@ void Suite::testCheckHammingDist(void)
     int dist2 = hammingDistance("000","001");
     int dist3 = hammingDistance("000","011");
 
-
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 0", dist1, 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 1", dist2, 1);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Returning hamming dist 2", dist3, 2);
 
 }
 
+//Testing binarySearch. Reminder: this binary search returns always the largest item
 void Suite::testCheckBinarySearch(void)
 {
 
@@ -97,6 +96,7 @@ void Suite::testCheckBinarySearch(void)
 
 }
 
+//setup for TableF
 void Suite::setUp(void)
 {
     TableOfValuesF = new TableF();
@@ -112,41 +112,41 @@ void Suite::setUp(void)
     
 }
 
+//de-setup for TableF
 void Suite::tearDown(void)
 {
     delete TableOfValuesF;
 
 }
 
-//-----------------------------------------------------------------------------
 
 CPPUNIT_TEST_SUITE_REGISTRATION( Suite );
 
 int main(int argc, char* argv[])
 {
-    //informs test-listener about testresults
+
+    //testresult obj
     CPPUNIT_NS::TestResult test_result_obj;
 
-    //register listener for collecting the test-results
+    //collector obj
     CPPUNIT_NS::TestResultCollector collected_results;
     test_result_obj.addListener(&collected_results);
 
-    //insert test-suite at test-runner by registry
+    //runner obj
     CPPUNIT_NS::TestRunner runner;
-
     runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
     runner.run(test_result_obj);
 
-    //output results in compiler-format
+    //cli output
     CPPUNIT_NS::CompilerOutputter cli_output(&collected_results, cerr);
     cli_output.write();
 
-    //Output XML
+    //xml output
     ofstream xml_out_obj("Project2UnitTests.xml");
     XmlOutputter xml_out(&collected_results, xml_out_obj);
     xml_out.write();
 
-    //return 0 if tests were successful
+    //return for main
     if (collected_results.wasSuccessful()){
         return 0;
     }else{

@@ -19,12 +19,7 @@ neighboursInfo::neighboursInfo(int N)
 
 neighboursInfo::~neighboursInfo()
 {
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     delete arrayId;
-    //     delete arrayDistance;
-    // }
-
+   
     //std::cout << "getting neighbors del" << std::endl;
     delete[] arrayId;
     delete[] arrayDistance;

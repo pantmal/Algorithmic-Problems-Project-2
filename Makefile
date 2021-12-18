@@ -74,7 +74,7 @@ frechet.o: ./fred/frechet.cpp
 interval.o: ./fred/interval.cpp
 	$(CC) $(CFLAGS) ./fred/interval.cpp
 
-point.o: ../fred/point.cpp
+point.o: ./fred/point.cpp
 	$(CC) $(CFLAGS) ./fred/point.cpp
 
 simplification.o: ./fred/simplification.cpp
